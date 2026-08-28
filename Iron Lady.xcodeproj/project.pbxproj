@@ -7,15 +7,93 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E301249F304201AC0046364E /* WantToGoMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E301249E304201AC0046364E /* WantToGoMapView.swift */; };
+		E30124A1304201BD0046364E /* WantToGoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30124A0304201BD0046364E /* WantToGoListView.swift */; };
+		E30124A330422F390046364E /* WantToGoImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30124A230422F390046364E /* WantToGoImageManager.swift */; };
+		E30124A6304247930046364E /* WantToGoArrivalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30124A5304247930046364E /* WantToGoArrivalManager.swift */; };
+		E30EBFCF2D163AF00052A791 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30EBFCE2D163AF00052A791 /* EditProfileView.swift */; };
+		E30EBFD12D1646F10052A791 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30EBFD02D1646F10052A791 /* Extensions.swift */; };
 		E31748222D079C0C00265372 /* Iron_LadyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31748212D079C0C00265372 /* Iron_LadyApp.swift */; };
 		E31748242D079C0C00265372 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31748232D079C0C00265372 /* ContentView.swift */; };
 		E31748262D079C0F00265372 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E31748252D079C0F00265372 /* Assets.xcassets */; };
 		E31748292D079C0F00265372 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E31748282D079C0F00265372 /* Preview Assets.xcassets */; };
 		E317482B2D079C0F00265372 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317482A2D079C0F00265372 /* Persistence.swift */; };
 		E317482E2D079C0F00265372 /* Iron_Lady.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = E317482C2D079C0F00265372 /* Iron_Lady.xcdatamodeld */; };
+		E317483A2D079EDA00265372 /* AddBreadcrumbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31748392D079EDA00265372 /* AddBreadcrumbView.swift */; };
+		E317483C2D079FCC00265372 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317483B2D079FCC00265372 /* ImagePicker.swift */; };
+		E317483E2D07A28300265372 /* BreadcrumbDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317483D2D07A28300265372 /* BreadcrumbDetailView.swift */; };
+		E31748402D07A44C00265372 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317483F2D07A44C00265372 /* LocationManager.swift */; };
+		E31748422D07A74C00265372 /* BreadcrumbMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31748412D07A74C00265372 /* BreadcrumbMapView.swift */; };
+		E31748462D07AA8F00265372 /* BreadcrumbTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31748452D07AA8F00265372 /* BreadcrumbTileView.swift */; };
+		E317484A2D07B92900265372 /* ZoomableImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31748492D07B92900265372 /* ZoomableImage.swift */; };
+		E317484C2D07BA1200265372 /* EditBreadcrumbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317484B2D07BA1200265372 /* EditBreadcrumbView.swift */; };
+		E317484E2D07BD8E00265372 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317484D2D07BD8E00265372 /* DashboardView.swift */; };
+		E31748502D07DC2700265372 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E317484F2D07DC2700265372 /* CameraView.swift */; };
+		E3195F54303FA51A0062482E /* WaymarXBackupType.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3195F53303FA51A0062482E /* WaymarXBackupType.swift */; };
+		E3195F56303FACCF0062482E /* BackupDocumentExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3195F55303FACCF0062482E /* BackupDocumentExporter.swift */; };
+		E3252E302D4472E9007E15D5 /* FavoritesBreadcrumbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3252E2F2D4472E9007E15D5 /* FavoritesBreadcrumbView.swift */; };
+		E3252E322D447313007E15D5 /* FavoriteCrumbTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3252E312D447313007E15D5 /* FavoriteCrumbTile.swift */; };
+		E3343C882F19C7440011C089 /* BreadcrumbStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3343C872F19C7440011C089 /* BreadcrumbStore.swift */; };
+		E345EECB2D0EB1E40012641A /* FullScreenImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */; };
+		E350B49B303906A700435068 /* BackupRestoreView.swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49A303906A700435068 /* BackupRestoreView.swift.swift */; };
+		E350B49D303919F700435068 /* WaymarXBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49C303919F700435068 /* WaymarXBackup.swift */; };
+		E350B49F30391A5200435068 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49E30391A5200435068 /* BackupManager.swift */; };
+		E350B4A13039211A00435068 /* BackupShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B4A03039211A00435068 /* BackupShareSheet.swift */; };
+		E3516EB42D94B7B5007FF7ED /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3516EB32D94B7B5007FF7ED /* SplashScreenView.swift */; };
+		E366B5982D12269F0038597C /* AllBreadcrumbsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B5972D12269F0038597C /* AllBreadcrumbsView.swift */; };
+		E366B59A2D1239AF0038597C /* BreadcrumbRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B5992D1239AF0038597C /* BreadcrumbRowView.swift */; };
+		E366B59C2D124E070038597C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B59B2D124E070038597C /* LoginView.swift */; };
+		E366B59E2D124E7F0038597C /* AddUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B59D2D124E7F0038597C /* AddUserView.swift */; };
+		E366B5A42D124EE10038597C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B5A32D124EE10038597C /* SettingsView.swift */; };
+		E366B5AF2D125BA10038597C /* CrumbUser+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B5AD2D125BA10038597C /* CrumbUser+CoreDataClass.swift */; };
+		E366B5B02D125BA10038597C /* CrumbUser+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366B5AE2D125BA10038597C /* CrumbUser+CoreDataProperties.swift */; };
+		E366BA5D2D8B733F004D5FA4 /* BreadcrumbExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366BA5C2D8B733F004D5FA4 /* BreadcrumbExport.swift */; };
+		E366BA5F2D8B758D004D5FA4 /* CrmGroupExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366BA5E2D8B758D004D5FA4 /* CrmGroupExport.swift */; };
+		E366BA632D8B75F3004D5FA4 /* ImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366BA622D8B75F3004D5FA4 /* ImportManager.swift */; };
+		E366BA652D8B7625004D5FA4 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366BA642D8B7625004D5FA4 /* DocumentPicker.swift */; };
+		E366BA672D8B7AE6004D5FA4 /* ShareSheetHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E366BA662D8B7AE6004D5FA4 /* ShareSheetHelper.swift */; };
+		E366BA6A2D8B7C7D004D5FA4 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E366BA692D8B7C7C004D5FA4 /* ZIPFoundation */; };
+		E368F1C82D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E368F1C72D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift */; };
+		E368F1CA2D0D22630014E9F1 /* SingleRowTileContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E368F1C92D0D22630014E9F1 /* SingleRowTileContainerView.swift */; };
+		E368F1CC2D0D2C540014E9F1 /* relativeTimeString.swift in Sources */ = {isa = PBXBuildFile; fileRef = E368F1CB2D0D2C540014E9F1 /* relativeTimeString.swift */; };
+		E37655D2303533DF0094AFCB /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = E37655D1303533DF0094AFCB /* GoogleMobileAds */; };
+		E37655D43035361E0094AFCB /* AdMobConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37655D33035361E0094AFCB /* AdMobConsentManager.swift */; };
+		E37655D6303537700094AFCB /* WaymarXBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37655D5303537700094AFCB /* WaymarXBannerView.swift */; };
+		E38DDDD62D470D5F001B7311 /* CrmGroup+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD22D470D5F001B7311 /* CrmGroup+CoreDataClass.swift */; };
+		E38DDDD72D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD32D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift */; };
+		E38DDDD82D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD42D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift */; };
+		E38DDDD92D470D5F001B7311 /* Breadcrumb+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD52D470D5F001B7311 /* Breadcrumb+CoreDataProperties.swift */; };
+		E38DDDDB2D481AB8001B7311 /* GroupEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDDA2D481AB8001B7311 /* GroupEditorView.swift */; };
+		E3AC33042D36F64800ADAFFE /* GroupCrumbMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3AC33032D36F64800ADAFFE /* GroupCrumbMapView.swift */; };
+		E3AE91712D38722800CA6129 /* BreadcrumbNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3AE91702D38722800CA6129 /* BreadcrumbNavigationView.swift */; };
+		E3AE91732D38929F00CA6129 /* TileContainerVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3AE91722D38929F00CA6129 /* TileContainerVerticalView.swift */; };
+		E3AFDE632F22D17B00F69826 /* GroupMaintenanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3AFDE622F22D17B00F69826 /* GroupMaintenanceView.swift */; };
+		E3AFDE652F23154500F69826 /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3AFDE642F23154300F69826 /* ImageLoader.swift */; };
+		E3C8E54D2D0B5926005B9F0B /* TileContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C8E54C2D0B5926005B9F0B /* TileContainerView.swift */; };
+		E3C8E54F2D0B5942005B9F0B /* GroupTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C8E54E2D0B5942005B9F0B /* GroupTileView.swift */; };
+		E3C8E5512D0B5963005B9F0B /* GroupCrumbsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C8E5502D0B5963005B9F0B /* GroupCrumbsView.swift */; };
+		E3C8E5532D0B5982005B9F0B /* UnnamedCrumbsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C8E5522D0B5982005B9F0B /* UnnamedCrumbsView.swift */; };
+		E3C8E5552D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C8E5542D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift */; };
+		E3D7F7042D1F487800AEBDB9 /* StartupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D7F7032D1F487800AEBDB9 /* StartupView.swift */; };
+		E3D7F7062D1F48A100AEBDB9 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D7F7052D1F48A100AEBDB9 /* NavigationModel.swift */; };
+		E3D7F7082D1F90DF00AEBDB9 /* GroupsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D7F7072D1F90DF00AEBDB9 /* GroupsListView.swift */; };
+		E3E588692FD0BAFC00C86A6D /* ExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E588682FD0BAFC00C86A6D /* ExportManager.swift */; };
+		E3E61D012D14EB53006FA68D /* BottomNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E61D002D14EB53006FA68D /* BottomNavigationBar.swift */; };
+		E3EC26DE3040A26C00BAC128 /* AllBreadcrumbExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */; };
+		E3EC26E03040E9AC00BAC128 /* DocumentExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */; };
+		E3EC6C722D43230D00915919 /* AddressUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC6C712D43230D00915919 /* AddressUpdater.swift */; };
+		E3FD7C772F1AC67900CE7EA6 /* UnnamedPinsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */; };
+		E3FD7C7A2F1B077500CE7EA6 /* RecentBreadcrumbsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E301249C3041F5650046364E /* Iron_Lady 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Iron_Lady 4.xcdatamodel"; sourceTree = "<group>"; };
+		E301249E304201AC0046364E /* WantToGoMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoMapView.swift; sourceTree = "<group>"; };
+		E30124A0304201BD0046364E /* WantToGoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoListView.swift; sourceTree = "<group>"; };
+		E30124A230422F390046364E /* WantToGoImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoImageManager.swift; sourceTree = "<group>"; };
+		E30124A5304247930046364E /* WantToGoArrivalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoArrivalManager.swift; sourceTree = "<group>"; };
+		E30EBFCE2D163AF00052A791 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		E30EBFD02D1646F10052A791 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		E317481E2D079C0C00265372 /* Iron Lady.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Iron Lady.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E31748212D079C0C00265372 /* Iron_LadyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Iron_LadyApp.swift; sourceTree = "<group>"; };
 		E31748232D079C0C00265372 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -23,6 +101,73 @@
 		E31748282D079C0F00265372 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		E317482A2D079C0F00265372 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		E317482D2D079C0F00265372 /* Iron_Lady.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Iron_Lady.xcdatamodel; sourceTree = "<group>"; };
+		E31748392D079EDA00265372 /* AddBreadcrumbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBreadcrumbView.swift; sourceTree = "<group>"; };
+		E317483B2D079FCC00265372 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
+		E317483D2D07A28300265372 /* BreadcrumbDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbDetailView.swift; sourceTree = "<group>"; };
+		E317483F2D07A44C00265372 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		E31748412D07A74C00265372 /* BreadcrumbMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbMapView.swift; sourceTree = "<group>"; };
+		E31748452D07AA8F00265372 /* BreadcrumbTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbTileView.swift; sourceTree = "<group>"; };
+		E31748492D07B92900265372 /* ZoomableImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableImage.swift; sourceTree = "<group>"; };
+		E317484B2D07BA1200265372 /* EditBreadcrumbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditBreadcrumbView.swift; sourceTree = "<group>"; };
+		E317484D2D07BD8E00265372 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		E317484F2D07DC2700265372 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
+		E31748512D07DCD900265372 /* Iron-Lady-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Iron-Lady-Info.plist"; sourceTree = SOURCE_ROOT; };
+		E3195F53303FA51A0062482E /* WaymarXBackupType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXBackupType.swift; sourceTree = "<group>"; };
+		E3195F55303FACCF0062482E /* BackupDocumentExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDocumentExporter.swift; sourceTree = "<group>"; };
+		E3252E2E2D44322E007E15D5 /* Iron_Lady 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Iron_Lady 2.xcdatamodel"; sourceTree = "<group>"; };
+		E3252E2F2D4472E9007E15D5 /* FavoritesBreadcrumbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBreadcrumbView.swift; sourceTree = "<group>"; };
+		E3252E312D447313007E15D5 /* FavoriteCrumbTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteCrumbTile.swift; sourceTree = "<group>"; };
+		E3343C872F19C7440011C089 /* BreadcrumbStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbStore.swift; sourceTree = "<group>"; };
+		E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenImageView.swift; sourceTree = "<group>"; };
+		E350B49A303906A700435068 /* BackupRestoreView.swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift.swift; sourceTree = "<group>"; };
+		E350B49C303919F700435068 /* WaymarXBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXBackup.swift; sourceTree = "<group>"; };
+		E350B49E30391A5200435068 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
+		E350B4A03039211A00435068 /* BackupShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupShareSheet.swift; sourceTree = "<group>"; };
+		E3516EB32D94B7B5007FF7ED /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
+		E366B5972D12269F0038597C /* AllBreadcrumbsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllBreadcrumbsView.swift; sourceTree = "<group>"; };
+		E366B5992D1239AF0038597C /* BreadcrumbRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbRowView.swift; sourceTree = "<group>"; };
+		E366B59B2D124E070038597C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		E366B59D2D124E7F0038597C /* AddUserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddUserView.swift; sourceTree = "<group>"; };
+		E366B5A32D124EE10038597C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E366B5AD2D125BA10038597C /* CrumbUser+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CrumbUser+CoreDataClass.swift"; sourceTree = "<group>"; };
+		E366B5AE2D125BA10038597C /* CrumbUser+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CrumbUser+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		E366BA5C2D8B733F004D5FA4 /* BreadcrumbExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbExport.swift; sourceTree = "<group>"; };
+		E366BA5E2D8B758D004D5FA4 /* CrmGroupExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrmGroupExport.swift; sourceTree = "<group>"; };
+		E366BA622D8B75F3004D5FA4 /* ImportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportManager.swift; sourceTree = "<group>"; };
+		E366BA642D8B7625004D5FA4 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
+		E366BA662D8B7AE6004D5FA4 /* ShareSheetHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetHelper.swift; sourceTree = "<group>"; };
+		E366BA6B2D8B951C004D5FA4 /* Iron Lady.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Iron Lady.entitlements"; sourceTree = "<group>"; };
+		E368F1C72D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentBreadcrumbTileView.swift; sourceTree = "<group>"; };
+		E368F1C92D0D22630014E9F1 /* SingleRowTileContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRowTileContainerView.swift; sourceTree = "<group>"; };
+		E368F1CB2D0D2C540014E9F1 /* relativeTimeString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = relativeTimeString.swift; sourceTree = "<group>"; };
+		E37655D33035361E0094AFCB /* AdMobConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConsentManager.swift; sourceTree = "<group>"; };
+		E37655D5303537700094AFCB /* WaymarXBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXBannerView.swift; sourceTree = "<group>"; };
+		E38DDD9B2D47040F001B7311 /* Iron_Lady 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Iron_Lady 3.xcdatamodel"; sourceTree = "<group>"; };
+		E38DDDD22D470D5F001B7311 /* CrmGroup+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CrmGroup+CoreDataClass.swift"; sourceTree = "<group>"; };
+		E38DDDD32D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CrmGroup+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		E38DDDD42D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Breadcrumb+CoreDataClass.swift"; path = "../Breadcrumb+CoreDataClass.swift"; sourceTree = "<group>"; };
+		E38DDDD52D470D5F001B7311 /* Breadcrumb+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Breadcrumb+CoreDataProperties.swift"; path = "../Breadcrumb+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		E38DDDDA2D481AB8001B7311 /* GroupEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditorView.swift; sourceTree = "<group>"; };
+		E3AC33032D36F64800ADAFFE /* GroupCrumbMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCrumbMapView.swift; sourceTree = "<group>"; };
+		E3AE91702D38722800CA6129 /* BreadcrumbNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbNavigationView.swift; sourceTree = "<group>"; };
+		E3AE91722D38929F00CA6129 /* TileContainerVerticalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileContainerVerticalView.swift; sourceTree = "<group>"; };
+		E3AFDE622F22D17B00F69826 /* GroupMaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupMaintenanceView.swift; sourceTree = "<group>"; };
+		E3AFDE642F23154300F69826 /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
+		E3C8E54C2D0B5926005B9F0B /* TileContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileContainerView.swift; sourceTree = "<group>"; };
+		E3C8E54E2D0B5942005B9F0B /* GroupTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTileView.swift; sourceTree = "<group>"; };
+		E3C8E5502D0B5963005B9F0B /* GroupCrumbsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCrumbsView.swift; sourceTree = "<group>"; };
+		E3C8E5522D0B5982005B9F0B /* UnnamedCrumbsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnamedCrumbsView.swift; sourceTree = "<group>"; };
+		E3C8E5542D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnamedBreadcrumbsListView.swift; sourceTree = "<group>"; };
+		E3D7F7032D1F487800AEBDB9 /* StartupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupView.swift; sourceTree = "<group>"; };
+		E3D7F7052D1F48A100AEBDB9 /* NavigationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationModel.swift; sourceTree = "<group>"; };
+		E3D7F7072D1F90DF00AEBDB9 /* GroupsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsListView.swift; sourceTree = "<group>"; };
+		E3E588682FD0BAFC00C86A6D /* ExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportManager.swift; sourceTree = "<group>"; };
+		E3E61D002D14EB53006FA68D /* BottomNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomNavigationBar.swift; sourceTree = "<group>"; };
+		E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllBreadcrumbExport.swift; sourceTree = "<group>"; };
+		E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExporter.swift; sourceTree = "<group>"; };
+		E3EC6C712D43230D00915919 /* AddressUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressUpdater.swift; sourceTree = "<group>"; };
+		E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnamedPinsView.swift; sourceTree = "<group>"; };
+		E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentBreadcrumbsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -30,15 +175,36 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E37655D2303533DF0094AFCB /* GoogleMobileAds in Frameworks */,
+				E366BA6A2D8B7C7D004D5FA4 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E301249D3042018F0046364E /* WantToGo */ = {
+			isa = PBXGroup;
+			children = (
+				E301249E304201AC0046364E /* WantToGoMapView.swift */,
+				E30124A0304201BD0046364E /* WantToGoListView.swift */,
+				E30124A230422F390046364E /* WantToGoImageManager.swift */,
+			);
+			path = WantToGo;
+			sourceTree = "<group>";
+		};
+		E30124A43042476B0046364E /* WantToGo */ = {
+			isa = PBXGroup;
+			children = (
+				E30124A5304247930046364E /* WantToGoArrivalManager.swift */,
+			);
+			path = WantToGo;
+			sourceTree = "<group>";
+		};
 		E31748152D079C0C00265372 = {
 			isa = PBXGroup;
 			children = (
+				E31748382D079E9E00265372 /* Models */,
 				E31748202D079C0C00265372 /* Iron Lady */,
 				E317481F2D079C0C00265372 /* Products */,
 			);
@@ -55,10 +221,12 @@
 		E31748202D079C0C00265372 /* Iron Lady */ = {
 			isa = PBXGroup;
 			children = (
+				E366BA6B2D8B951C004D5FA4 /* Iron Lady.entitlements */,
+				E31748512D07DCD900265372 /* Iron-Lady-Info.plist */,
+				E31748442D07AA5A00265372 /* Swift Code */,
+				E31748432D07AA2B00265372 /* Views */,
 				E31748212D079C0C00265372 /* Iron_LadyApp.swift */,
-				E31748232D079C0C00265372 /* ContentView.swift */,
 				E31748252D079C0F00265372 /* Assets.xcassets */,
-				E317482A2D079C0F00265372 /* Persistence.swift */,
 				E317482C2D079C0F00265372 /* Iron_Lady.xcdatamodeld */,
 				E31748272D079C0F00265372 /* Preview Content */,
 			);
@@ -71,6 +239,104 @@
 				E31748282D079C0F00265372 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		E31748382D079E9E00265372 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E38DDDD22D470D5F001B7311 /* CrmGroup+CoreDataClass.swift */,
+				E38DDDD32D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift */,
+				E38DDDD42D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift */,
+				E38DDDD52D470D5F001B7311 /* Breadcrumb+CoreDataProperties.swift */,
+				E366B5AD2D125BA10038597C /* CrumbUser+CoreDataClass.swift */,
+				E366B5AE2D125BA10038597C /* CrumbUser+CoreDataProperties.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E31748432D07AA2B00265372 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E301249D3042018F0046364E /* WantToGo */,
+				E3AFDE642F23154300F69826 /* ImageLoader.swift */,
+				E31748232D079C0C00265372 /* ContentView.swift */,
+				E31748392D079EDA00265372 /* AddBreadcrumbView.swift */,
+				E317483D2D07A28300265372 /* BreadcrumbDetailView.swift */,
+				E31748412D07A74C00265372 /* BreadcrumbMapView.swift */,
+				E31748452D07AA8F00265372 /* BreadcrumbTileView.swift */,
+				E31748492D07B92900265372 /* ZoomableImage.swift */,
+				E317484B2D07BA1200265372 /* EditBreadcrumbView.swift */,
+				E317484D2D07BD8E00265372 /* DashboardView.swift */,
+				E317484F2D07DC2700265372 /* CameraView.swift */,
+				E3C8E54C2D0B5926005B9F0B /* TileContainerView.swift */,
+				E3C8E54E2D0B5942005B9F0B /* GroupTileView.swift */,
+				E3C8E5502D0B5963005B9F0B /* GroupCrumbsView.swift */,
+				E3C8E5522D0B5982005B9F0B /* UnnamedCrumbsView.swift */,
+				E3C8E5542D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift */,
+				E368F1C72D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift */,
+				E368F1C92D0D22630014E9F1 /* SingleRowTileContainerView.swift */,
+				E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */,
+				E366B5972D12269F0038597C /* AllBreadcrumbsView.swift */,
+				E366B5992D1239AF0038597C /* BreadcrumbRowView.swift */,
+				E366B59B2D124E070038597C /* LoginView.swift */,
+				E366B59D2D124E7F0038597C /* AddUserView.swift */,
+				E366B5A32D124EE10038597C /* SettingsView.swift */,
+				E3E61D002D14EB53006FA68D /* BottomNavigationBar.swift */,
+				E30EBFCE2D163AF00052A791 /* EditProfileView.swift */,
+				E3D7F7032D1F487800AEBDB9 /* StartupView.swift */,
+				E3D7F7072D1F90DF00AEBDB9 /* GroupsListView.swift */,
+				E3AC33032D36F64800ADAFFE /* GroupCrumbMapView.swift */,
+				E3AE91702D38722800CA6129 /* BreadcrumbNavigationView.swift */,
+				E3AE91722D38929F00CA6129 /* TileContainerVerticalView.swift */,
+				E3252E2F2D4472E9007E15D5 /* FavoritesBreadcrumbView.swift */,
+				E3252E312D447313007E15D5 /* FavoriteCrumbTile.swift */,
+				E38DDDDA2D481AB8001B7311 /* GroupEditorView.swift */,
+				E3516EB32D94B7B5007FF7ED /* SplashScreenView.swift */,
+				E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */,
+				E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */,
+				E3AFDE622F22D17B00F69826 /* GroupMaintenanceView.swift */,
+				E37655D5303537700094AFCB /* WaymarXBannerView.swift */,
+				E350B49A303906A700435068 /* BackupRestoreView.swift.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E31748442D07AA5A00265372 /* Swift Code */ = {
+			isa = PBXGroup;
+			children = (
+				E30124A43042476B0046364E /* WantToGo */,
+				E366BA5A2D8B7307004D5FA4 /* ImportExport */,
+				E317482A2D079C0F00265372 /* Persistence.swift */,
+				E317483B2D079FCC00265372 /* ImagePicker.swift */,
+				E317483F2D07A44C00265372 /* LocationManager.swift */,
+				E368F1CB2D0D2C540014E9F1 /* relativeTimeString.swift */,
+				E30EBFD02D1646F10052A791 /* Extensions.swift */,
+				E3D7F7052D1F48A100AEBDB9 /* NavigationModel.swift */,
+				E3EC6C712D43230D00915919 /* AddressUpdater.swift */,
+				E3343C872F19C7440011C089 /* BreadcrumbStore.swift */,
+				E37655D33035361E0094AFCB /* AdMobConsentManager.swift */,
+				E350B49C303919F700435068 /* WaymarXBackup.swift */,
+				E350B49E30391A5200435068 /* BackupManager.swift */,
+				E350B4A03039211A00435068 /* BackupShareSheet.swift */,
+				E3195F53303FA51A0062482E /* WaymarXBackupType.swift */,
+				E3195F55303FACCF0062482E /* BackupDocumentExporter.swift */,
+			);
+			path = "Swift Code";
+			sourceTree = "<group>";
+		};
+		E366BA5A2D8B7307004D5FA4 /* ImportExport */ = {
+			isa = PBXGroup;
+			children = (
+				E366BA5C2D8B733F004D5FA4 /* BreadcrumbExport.swift */,
+				E366BA5E2D8B758D004D5FA4 /* CrmGroupExport.swift */,
+				E366BA622D8B75F3004D5FA4 /* ImportManager.swift */,
+				E366BA642D8B7625004D5FA4 /* DocumentPicker.swift */,
+				E366BA662D8B7AE6004D5FA4 /* ShareSheetHelper.swift */,
+				E3E588682FD0BAFC00C86A6D /* ExportManager.swift */,
+				E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */,
+				E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */,
+			);
+			path = ImportExport;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -117,6 +383,10 @@
 				Base,
 			);
 			mainGroup = E31748152D079C0C00265372;
+			packageReferences = (
+				E366BA682D8B7C7C004D5FA4 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				E37655D0303533DF0094AFCB /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			productRefGroup = E317481F2D079C0C00265372 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -143,9 +413,78 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E37655D43035361E0094AFCB /* AdMobConsentManager.swift in Sources */,
+				E3E588692FD0BAFC00C86A6D /* ExportManager.swift in Sources */,
+				E38DDDD92D470D5F001B7311 /* Breadcrumb+CoreDataProperties.swift in Sources */,
+				E3195F56303FACCF0062482E /* BackupDocumentExporter.swift in Sources */,
+				E368F1C82D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift in Sources */,
+				E317483A2D079EDA00265372 /* AddBreadcrumbView.swift in Sources */,
+				E366BA632D8B75F3004D5FA4 /* ImportManager.swift in Sources */,
+				E366BA652D8B7625004D5FA4 /* DocumentPicker.swift in Sources */,
+				E3FD7C772F1AC67900CE7EA6 /* UnnamedPinsView.swift in Sources */,
+				E317484E2D07BD8E00265372 /* DashboardView.swift in Sources */,
+				E345EECB2D0EB1E40012641A /* FullScreenImageView.swift in Sources */,
+				E317483E2D07A28300265372 /* BreadcrumbDetailView.swift in Sources */,
+				E3D7F7042D1F487800AEBDB9 /* StartupView.swift in Sources */,
+				E31748402D07A44C00265372 /* LocationManager.swift in Sources */,
+				E30124A330422F390046364E /* WantToGoImageManager.swift in Sources */,
+				E317484C2D07BA1200265372 /* EditBreadcrumbView.swift in Sources */,
+				E368F1CC2D0D2C540014E9F1 /* relativeTimeString.swift in Sources */,
+				E38DDDD82D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift in Sources */,
+				E366BA5F2D8B758D004D5FA4 /* CrmGroupExport.swift in Sources */,
+				E3C8E54F2D0B5942005B9F0B /* GroupTileView.swift in Sources */,
+				E301249F304201AC0046364E /* WantToGoMapView.swift in Sources */,
+				E30124A6304247930046364E /* WantToGoArrivalManager.swift in Sources */,
+				E366B5AF2D125BA10038597C /* CrumbUser+CoreDataClass.swift in Sources */,
+				E366B5982D12269F0038597C /* AllBreadcrumbsView.swift in Sources */,
+				E30EBFD12D1646F10052A791 /* Extensions.swift in Sources */,
+				E38DDDDB2D481AB8001B7311 /* GroupEditorView.swift in Sources */,
+				E3AFDE652F23154500F69826 /* ImageLoader.swift in Sources */,
 				E317482B2D079C0F00265372 /* Persistence.swift in Sources */,
 				E31748242D079C0C00265372 /* ContentView.swift in Sources */,
 				E31748222D079C0C00265372 /* Iron_LadyApp.swift in Sources */,
+				E3AC33042D36F64800ADAFFE /* GroupCrumbMapView.swift in Sources */,
+				E30124A1304201BD0046364E /* WantToGoListView.swift in Sources */,
+				E37655D6303537700094AFCB /* WaymarXBannerView.swift in Sources */,
+				E3EC26DE3040A26C00BAC128 /* AllBreadcrumbExport.swift in Sources */,
+				E31748462D07AA8F00265372 /* BreadcrumbTileView.swift in Sources */,
+				E30EBFCF2D163AF00052A791 /* EditProfileView.swift in Sources */,
+				E366B5B02D125BA10038597C /* CrumbUser+CoreDataProperties.swift in Sources */,
+				E3D7F7082D1F90DF00AEBDB9 /* GroupsListView.swift in Sources */,
+				E366B5A42D124EE10038597C /* SettingsView.swift in Sources */,
+				E3D7F7062D1F48A100AEBDB9 /* NavigationModel.swift in Sources */,
+				E31748422D07A74C00265372 /* BreadcrumbMapView.swift in Sources */,
+				E3252E322D447313007E15D5 /* FavoriteCrumbTile.swift in Sources */,
+				E3C8E5512D0B5963005B9F0B /* GroupCrumbsView.swift in Sources */,
+				E3195F54303FA51A0062482E /* WaymarXBackupType.swift in Sources */,
+				E3AE91712D38722800CA6129 /* BreadcrumbNavigationView.swift in Sources */,
+				E350B49B303906A700435068 /* BackupRestoreView.swift.swift in Sources */,
+				E317483C2D079FCC00265372 /* ImagePicker.swift in Sources */,
+				E3C8E5552D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift in Sources */,
+				E366B59E2D124E7F0038597C /* AddUserView.swift in Sources */,
+				E3C8E5532D0B5982005B9F0B /* UnnamedCrumbsView.swift in Sources */,
+				E3252E302D4472E9007E15D5 /* FavoritesBreadcrumbView.swift in Sources */,
+				E3E61D012D14EB53006FA68D /* BottomNavigationBar.swift in Sources */,
+				E366BA672D8B7AE6004D5FA4 /* ShareSheetHelper.swift in Sources */,
+				E3C8E54D2D0B5926005B9F0B /* TileContainerView.swift in Sources */,
+				E350B49F30391A5200435068 /* BackupManager.swift in Sources */,
+				E368F1CA2D0D22630014E9F1 /* SingleRowTileContainerView.swift in Sources */,
+				E38DDDD62D470D5F001B7311 /* CrmGroup+CoreDataClass.swift in Sources */,
+				E38DDDD72D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift in Sources */,
+				E31748502D07DC2700265372 /* CameraView.swift in Sources */,
+				E317484A2D07B92900265372 /* ZoomableImage.swift in Sources */,
+				E3516EB42D94B7B5007FF7ED /* SplashScreenView.swift in Sources */,
+				E366BA5D2D8B733F004D5FA4 /* BreadcrumbExport.swift in Sources */,
+				E3EC26E03040E9AC00BAC128 /* DocumentExporter.swift in Sources */,
+				E3343C882F19C7440011C089 /* BreadcrumbStore.swift in Sources */,
+				E350B4A13039211A00435068 /* BackupShareSheet.swift in Sources */,
+				E3FD7C7A2F1B077500CE7EA6 /* RecentBreadcrumbsView.swift in Sources */,
+				E3EC6C722D43230D00915919 /* AddressUpdater.swift in Sources */,
+				E3AE91732D38929F00CA6129 /* TileContainerVerticalView.swift in Sources */,
+				E366B59A2D1239AF0038597C /* BreadcrumbRowView.swift in Sources */,
+				E350B49D303919F700435068 /* WaymarXBackup.swift in Sources */,
+				E3AFDE632F22D17B00F69826 /* GroupMaintenanceView.swift in Sources */,
+				E366B59C2D124E070038597C /* LoginView.swift in Sources */,
 				E317482E2D079C0F00265372 /* Iron_Lady.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -277,17 +616,30 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Iron Lady/Iron Lady.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Iron Lady/Preview Content\"";
 				DEVELOPMENT_TEAM = 6U7VH5MKR5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Iron-Lady-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = WaymarX;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to take photos for Pin Drops.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "WaymarX uses your location in the background to notify you when you arrive near a saved Want to Go destination.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is required for WaymarX Pin tracking.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WaymarX uses your location to save pins, show nearby destinations, and provide navigation features.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need permission to save photos to your photo library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to select photos for Pins.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIStatusBarHidden = NO;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -306,17 +658,30 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Iron Lady/Iron Lady.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Iron Lady/Preview Content\"";
 				DEVELOPMENT_TEAM = 6U7VH5MKR5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Iron-Lady-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = WaymarX;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to take photos for Pin Drops.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "WaymarX uses your location in the background to notify you when you arrive near a saved Want to Go destination.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is required for WaymarX Pin tracking.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WaymarX uses your location to save pins, show nearby destinations, and provide navigation features.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need permission to save photos to your photo library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to select photos for Pins.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIStatusBarHidden = NO;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -353,13 +718,48 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E366BA682D8B7C7C004D5FA4 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
+		E37655D0303533DF0094AFCB /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E366BA692D8B7C7C004D5FA4 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E366BA682D8B7C7C004D5FA4 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+		E37655D1303533DF0094AFCB /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E37655D0303533DF0094AFCB /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin XCVersionGroup section */
 		E317482C2D079C0F00265372 /* Iron_Lady.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				E301249C3041F5650046364E /* Iron_Lady 4.xcdatamodel */,
+				E38DDD9B2D47040F001B7311 /* Iron_Lady 3.xcdatamodel */,
+				E3252E2E2D44322E007E15D5 /* Iron_Lady 2.xcdatamodel */,
 				E317482D2D079C0F00265372 /* Iron_Lady.xcdatamodel */,
 			);
-			currentVersion = E317482D2D079C0F00265372 /* Iron_Lady.xcdatamodel */;
+			currentVersion = E301249C3041F5650046364E /* Iron_Lady 4.xcdatamodel */;
 			path = Iron_Lady.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
