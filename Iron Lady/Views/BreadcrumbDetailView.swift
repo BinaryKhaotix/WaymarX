@@ -97,6 +97,7 @@ struct BreadcrumbDetailView: View {
                     onEdit: { navigationModel.path.append(.editBreadcrumb(breadcrumb: breadcrumb)) },
                     onExport: { exportBreadcrumb(breadcrumb) },
                     onToggleFavorite: { toggleFavoriteStatus(breadcrumb) },
+                    onPromote: { Task { await WantToGoArrivalManager .shared .markAsVisited( breadcrumb ) } },
                     onBack: { navigationModel.pop() }
                 )
                 .id(breadcrumb.objectID)
@@ -203,6 +204,7 @@ private struct BreadcrumbDetailContentView: View {
     let onEdit: () -> Void
     let onExport: () -> Void
     let onToggleFavorite: () -> Void
+    let onPromote: () -> Void
     let onBack: () -> Void
 
     var body: some View {
@@ -214,6 +216,7 @@ private struct BreadcrumbDetailContentView: View {
                     VStack(spacing: 10) {
                         BreadcrumbHeaderView(breadcrumb: breadcrumb)
                         BreadcrumbImageView(breadcrumb: breadcrumb, showFullScreenImage: $showFullScreenImage)
+                        if breadcrumb.isWantToGo { Button( action: onPromote ) { Label( "Promote Pin", systemImage: "arrow.up.circle.fill" ) .font( .system( size: 17, weight: .semibold ) ) .frame( maxWidth: .infinity ) .padding(.vertical, 12) .background( Color("Dark Blue") ) .foregroundStyle( Color("Light Orange") ) .clipShape( RoundedRectangle( cornerRadius: 14, style: .continuous ) ) } .buttonStyle(.plain) .padding(.horizontal, 20) }
                         LocationDateView(breadcrumb: breadcrumb)
                         NotesView(breadcrumb: breadcrumb)
 

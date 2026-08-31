@@ -26,9 +26,12 @@ struct WantToGoMapView: View {
     
     @State private var selectedCoordinate: CLLocationCoordinate2D?
     @State private var selectedPlaceName: String?
+
+    @State private var selectedStreetAddress: String?
     @State private var selectedCity: String?
     @State private var selectedState: String?
-    
+    @State private var selectedZipCode: String?
+
     @State private var note: String = ""
     
     // MARK: - Save
@@ -359,8 +362,10 @@ struct WantToGoMapView: View {
             region: $region,
             selectedCoordinate: $selectedCoordinate,
             selectedPlaceName: $selectedPlaceName,
+            selectedStreetAddress: $selectedStreetAddress,
             selectedCity: $selectedCity,
-            selectedState: $selectedState
+            selectedState: $selectedState,
+            selectedZipCode: $selectedZipCode
         )
         .clipShape(
             RoundedRectangle(
@@ -595,21 +600,39 @@ struct WantToGoMapView: View {
     private func selectSearchResult(
         _ item: MKMapItem
     ) {
-        
-        let coordinate =
-        item.placemark.coordinate
-        
+        let coordinate = item.placemark.coordinate
+        let placemark = item.placemark
+
         selectedCoordinate = coordinate
-        
+
         selectedPlaceName =
-        item.name ?? "Destination"
-        
+            item.name
+            ?? placemark.name
+            ?? "Destination"
+
+        // Build street address from house number + street name
+        let streetParts = [
+            placemark.subThoroughfare,
+            placemark.thoroughfare
+        ]
+        .compactMap { $0 }
+        .filter { !$0.isEmpty }
+
+        selectedStreetAddress =
+            streetParts.isEmpty
+            ? nil
+            : streetParts.joined(separator: " ")
+
         selectedCity =
-        item.placemark.locality
-        
+            placemark.locality
+            ?? placemark.subAdministrativeArea
+
         selectedState =
-        item.placemark.administrativeArea
-        
+            placemark.administrativeArea
+
+        selectedZipCode =
+            placemark.postalCode
+
         region = MKCoordinateRegion(
             center: coordinate,
             span: MKCoordinateSpan(
@@ -617,10 +640,9 @@ struct WantToGoMapView: View {
                 longitudeDelta: 0.03
             )
         )
-        
+
         searchResults = []
     }
-    
     // MARK: - Focus Map
     
     private func focusMap(
@@ -671,21 +693,27 @@ struct WantToGoMapView: View {
                 ?? "Want to Go"
                 
                 breadcrumb.latitude =
-                coordinate.latitude
-                
+                    coordinate.latitude
+
                 breadcrumb.longitude =
-                coordinate.longitude
-                
+                    coordinate.longitude
+
+                breadcrumb.streetAddress =
+                    selectedStreetAddress
+
                 breadcrumb.city =
-                selectedCity
-                
+                    selectedCity
+
                 breadcrumb.state =
-                selectedState
-                
+                    selectedState
+
+                breadcrumb.zipCode =
+                    selectedZipCode
+
                 breadcrumb.note =
-                note.trimmingCharacters(
-                    in: .whitespacesAndNewlines
-                )
+                    note.trimmingCharacters(
+                        in: .whitespacesAndNewlines
+                    )
                 
                 breadcrumb.isFavorite = false
                 
@@ -748,12 +776,18 @@ private struct WantToGoMapRepresentable:
     @Binding var selectedPlaceName:
         String?
 
+    @Binding var selectedStreetAddress:
+        String?
+
     @Binding var selectedCity:
         String?
 
     @Binding var selectedState:
         String?
 
+    @Binding var selectedZipCode:
+        String?
+    
     func makeUIView(
         context: Context
     ) -> MKMapView {
@@ -897,11 +931,11 @@ private struct WantToGoMapRepresentable:
             parent.selectedPlaceName =
                 "Selected Location"
 
-            parent.selectedCity =
-                nil
-
-            parent.selectedState =
-                nil
+            // Clear the previous address while geocoding the new coordinate
+            parent.selectedStreetAddress = nil
+            parent.selectedCity = nil
+            parent.selectedState = nil
+            parent.selectedZipCode = nil
 
             reverseGeocode(
                 coordinate
@@ -911,49 +945,69 @@ private struct WantToGoMapRepresentable:
         // MARK: Reverse Geocode
 
         private func reverseGeocode(
-            _ coordinate:
-                CLLocationCoordinate2D
+            _ coordinate: CLLocationCoordinate2D
         ) {
+            let location = CLLocation(
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude
+            )
 
-            let location =
-                CLLocation(
-                    latitude:
-                        coordinate.latitude,
-                    longitude:
-                        coordinate.longitude
-                )
+            CLGeocoder().reverseGeocodeLocation(
+                location
+            ) { placemarks, error in
 
-            CLGeocoder()
-                .reverseGeocodeLocation(
-                    location
-                ) { placemarks, _ in
-
-                    guard let placemark =
-                            placemarks?.first
-                    else {
-                        return
-                    }
-
-                    DispatchQueue.main.async {
-
-                        self.parent
-                            .selectedPlaceName =
-                            placemark.name
-                            ?? placemark.locality
-                            ?? "Selected Location"
-
-                        self.parent
-                            .selectedCity =
-                            placemark.locality
-
-                        self.parent
-                            .selectedState =
-                            placemark
-                                .administrativeArea
-                    }
+                if let error {
+                    print(
+                        "Want To Go reverse geocode failed:",
+                        error.localizedDescription
+                    )
+                    return
                 }
-        }
 
+                guard let placemark =
+                        placemarks?.first
+                else {
+                    print(
+                        "Want To Go reverse geocode returned no placemark."
+                    )
+                    return
+                }
+
+                let streetParts = [
+                    placemark.subThoroughfare,
+                    placemark.thoroughfare
+                ]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+
+                let streetAddress =
+                    streetParts.isEmpty
+                    ? nil
+                    : streetParts.joined(separator: " ")
+
+                DispatchQueue.main.async {
+
+                    self.parent.selectedPlaceName =
+                        placemark.name
+                        ?? placemark.thoroughfare
+                        ?? placemark.locality
+                        ?? "Selected Location"
+
+                    self.parent.selectedStreetAddress =
+                        streetAddress
+
+                    self.parent.selectedCity =
+                        placemark.locality
+                        ?? placemark.subAdministrativeArea
+
+                    self.parent.selectedState =
+                        placemark.administrativeArea
+
+                    self.parent.selectedZipCode =
+                        placemark.postalCode
+                }
+            }
+        }
         // MARK: Map Interaction
 
         func mapView(

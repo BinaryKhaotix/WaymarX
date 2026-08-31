@@ -26,7 +26,16 @@ final class WantToGoArrivalManager:
     private var monitor: CLMonitor?
     private var monitorTask: Task<Void, Never>?
     private var isStartingMonitor = false
+    private var locationContinuation:
+        CheckedContinuation<CLLocation?, Never>?
+    
+    private let fallbackNotificationCooldown:
+        TimeInterval = 6 * 60 * 60
 
+    private let fallbackNotificationDefaultsPrefix =
+        "WantToGoFallbackNotification."
+    
+    
     private override init() {
 
         super.init()
@@ -41,14 +50,98 @@ final class WantToGoArrivalManager:
 
     func start() {
 
+        print("")
+        print("====================================")
+        print("WantToGoArrivalManager START")
+        print("====================================")
+
+        print(
+            "Location authorization:",
+            locationAuthorizationDescription(
+                locationManager.authorizationStatus
+            )
+        )
+
         requestNotificationPermission()
+
         requestLocationPermission()
 
+        if CLLocationManager.significantLocationChangeMonitoringAvailable() {
+
+            locationManager
+                .startMonitoringSignificantLocationChanges()
+
+            print(
+                "WantToGo significant-location fallback started."
+            )
+
+        } else {
+
+            print(
+                "WantToGo significant-location monitoring unavailable."
+            )
+        }
+        
         Task {
             await startMonitor()
         }
     }
 
+    private func locationAuthorizationDescription(
+        _ status: CLAuthorizationStatus
+    ) -> String {
+
+        switch status {
+
+        case .notDetermined:
+            return "notDetermined"
+
+        case .restricted:
+            return "restricted"
+
+        case .denied:
+            return "denied"
+
+        case .authorizedAlways:
+            return "authorizedAlways"
+
+        case .authorizedWhenInUse:
+            return "authorizedWhenInUse"
+
+        @unknown default:
+            return "unknown"
+        }
+    }
+    
+    private func lastFallbackNotificationDate(
+        for breadcrumbID: UUID
+    ) -> Date? {
+
+        let key =
+            fallbackNotificationDefaultsPrefix
+            + breadcrumbID.uuidString
+
+        return UserDefaults.standard
+            .object(
+                forKey: key
+            ) as? Date
+    }
+
+    private func saveFallbackNotificationDate(
+        _ date: Date,
+        for breadcrumbID: UUID
+    ) {
+
+        let key =
+            fallbackNotificationDefaultsPrefix
+            + breadcrumbID.uuidString
+
+        UserDefaults.standard.set(
+            date,
+            forKey: key
+        )
+    }
+    
     // MARK: - Notification Permission
 
     private func requestNotificationPermission() {
@@ -131,10 +224,306 @@ final class WantToGoArrivalManager:
         }
     }
 
+    private func getCurrentLocation() async -> CLLocation? {
+
+        if let currentLocation =
+            locationManager.location {
+
+            return currentLocation
+        }
+
+        return await withCheckedContinuation {
+            continuation in
+
+            locationContinuation =
+                continuation
+
+            locationManager.requestLocation()
+        }
+    }
+    
+    func locationManager(
+        _ manager: CLLocationManager,
+        didUpdateLocations locations: [CLLocation]
+    ) {
+
+        guard let location =
+            locations.last
+        else {
+            return
+        }
+
+
+        print("")
+        print(
+            "WantToGo location update:",
+            location.coordinate.latitude,
+            location.coordinate.longitude
+        )
+
+        print(
+            "Location accuracy:",
+            location.horizontalAccuracy
+        )
+
+
+        // MARK: - Complete Any Pending One-Time Location Request
+
+        if let continuation =
+            locationContinuation {
+
+            continuation.resume(
+                returning: location
+            )
+
+            locationContinuation = nil
+        }
+
+
+        // MARK: - Run Fallback Proximity Check
+
+        Task {
+
+            await checkWantToGoProximity(
+                from: location
+            )
+        }
+    }
+    
+    func locationManager(
+        _ manager: CLLocationManager,
+        didFailWithError error: Error
+    ) {
+
+        print(
+            "WantToGo location request failed:",
+            error.localizedDescription
+        )
+
+        locationContinuation?
+            .resume(
+                returning: nil
+            )
+
+        locationContinuation = nil
+    }
+    
+    // MARK: - WantToGo Fallback Proximity Check
+
+    private func checkWantToGoProximity(
+        from currentLocation: CLLocation
+    ) async {
+
+        guard currentLocation.horizontalAccuracy >= 0 else {
+
+            print(
+                "WantToGo fallback ignored invalid location accuracy."
+            )
+
+            return
+        }
+
+
+        let context =
+            PersistenceController
+                .shared
+                .container
+                .newBackgroundContext()
+
+
+        let nearbyDestinations:
+            [(id: UUID, name: String, distance: Double, radius: Double)] =
+            await context.perform {
+
+                let request:
+                    NSFetchRequest<Breadcrumb> =
+                        Breadcrumb.fetchRequest()
+
+                request.predicate =
+                    NSPredicate(
+                        format:
+                            "isWantToGo == YES"
+                    )
+
+                do {
+
+                    let breadcrumbs =
+                        try context.fetch(
+                            request
+                        )
+
+                    return breadcrumbs
+                        .compactMap { breadcrumb in
+
+                            guard let id =
+                                    breadcrumb.id
+                            else {
+
+                                return nil
+                            }
+
+
+                            let destinationLocation =
+                                CLLocation(
+                                    latitude:
+                                        breadcrumb.latitude,
+                                    longitude:
+                                        breadcrumb.longitude
+                                )
+
+
+                            let distance =
+                                currentLocation.distance(
+                                    from:
+                                        destinationLocation
+                                )
+
+
+                            let radius =
+                                breadcrumb.arrivalRadius?
+                                    .doubleValue
+                                ?? 300.0
+
+
+                            guard distance <= radius
+                            else {
+
+                                return nil
+                            }
+
+
+                            return (
+                                id: id,
+                                name:
+                                    breadcrumb.name
+                                    ?? "Unnamed Destination",
+                                distance:
+                                    distance,
+                                radius:
+                                    radius
+                            )
+                        }
+
+                } catch {
+
+                    print(
+                        "WantToGo fallback fetch failed:",
+                        error.localizedDescription
+                    )
+
+                    return []
+                }
+            }
+
+
+        guard !nearbyDestinations.isEmpty
+        else {
+
+            print(
+                "WantToGo fallback: no destinations within arrival radius."
+            )
+
+            return
+        }
+
+
+        print("")
+        print(
+            "WantToGo fallback found",
+            nearbyDestinations.count,
+            "nearby destination(s)."
+        )
+
+
+        for destination
+            in nearbyDestinations {
+
+            print(
+                "Nearby:",
+                destination.name
+            )
+
+            print(
+                "Distance:",
+                Int(destination.distance),
+                "meters"
+            )
+
+            print(
+                "Arrival radius:",
+                Int(destination.radius),
+                "meters"
+            )
+
+
+            // MARK: - Notification Cooldown
+
+            if let lastNotification =
+                lastFallbackNotificationDate(
+                    for: destination.id
+                ) {
+
+                let elapsed =
+                    Date().timeIntervalSince(
+                        lastNotification
+                    )
+
+                if elapsed <
+                    fallbackNotificationCooldown {
+
+                    print(
+                        "Fallback notification suppressed by cooldown:",
+                        destination.name
+                    )
+
+                    continue
+                }
+            }
+
+
+            print(
+                "Fallback sending arrival notification:",
+                destination.name
+            )
+
+
+            await sendArrivalNotification(
+                breadcrumbID:
+                    destination.id
+            )
+
+
+            saveFallbackNotificationDate(
+                Date(),
+                for: destination.id
+            )
+        }
+    }
+    
     // MARK: - Start Monitor
 
     private func startMonitor() async {
+        
+        print("")
+        print("WantToGo: startMonitor() called")
 
+        print(
+            "Authorization:",
+            locationAuthorizationDescription(
+                locationManager.authorizationStatus
+            )
+        )
+
+        print(
+            "Existing monitor:",
+            monitor != nil
+        )
+
+        print(
+            "Monitor starting:",
+            isStartingMonitor
+        )
+        
         guard monitor == nil,
               !isStartingMonitor
         else {
@@ -148,8 +537,27 @@ final class WantToGoArrivalManager:
                 monitorName
             )
 
-        monitor =
-            newMonitor
+        monitor = newMonitor
+        
+        print(
+            "WantToGo: CLMonitor created successfully"
+        )
+
+        let existingIdentifiers =
+            await newMonitor.identifiers
+
+        print(
+            "Existing monitored condition count:",
+            existingIdentifiers.count
+        )
+
+        for identifier in existingIdentifiers {
+
+            print(
+                "Existing monitor identifier:",
+                identifier
+            )
+        }
 
         isStartingMonitor = false
         
@@ -185,11 +593,40 @@ final class WantToGoArrivalManager:
 
     private func restoreWantToGoGeofences() async {
 
+        guard let monitor else {
+
+            print(
+                "WantToGo restore failed: monitor is unavailable."
+            )
+
+            return
+        }
+
+        let currentLocation =
+            await getCurrentLocation()
+
+        if let currentLocation {
+
+            print("")
+            print(
+                "WantToGo current location:",
+                currentLocation.coordinate.latitude,
+                currentLocation.coordinate.longitude
+            )
+
+        } else {
+
+            print(
+                "WantToGo current location unavailable."
+            )
+        }
+
         let context =
             PersistenceController
                 .shared
                 .container
                 .newBackgroundContext()
+
 
         let breadcrumbData: [
             (
@@ -203,7 +640,7 @@ final class WantToGoArrivalManager:
 
             let request:
                 NSFetchRequest<Breadcrumb> =
-                Breadcrumb.fetchRequest()
+                    Breadcrumb.fetchRequest()
 
             request.predicate =
                 NSPredicate(
@@ -218,21 +655,83 @@ final class WantToGoArrivalManager:
                         request
                     )
 
-                return breadcrumbs
+
+                let sortedBreadcrumbs:
+                    [Breadcrumb]
+
+
+                if let currentLocation {
+
+                    sortedBreadcrumbs =
+                        breadcrumbs.sorted {
+                            first,
+                            second in
+
+                            let firstLocation =
+                                CLLocation(
+                                    latitude:
+                                        first.latitude,
+                                    longitude:
+                                        first.longitude
+                                )
+
+                            let secondLocation =
+                                CLLocation(
+                                    latitude:
+                                        second.latitude,
+                                    longitude:
+                                        second.longitude
+                                )
+
+                            let firstDistance =
+                                firstLocation.distance(
+                                    from:
+                                        currentLocation
+                                )
+
+                            let secondDistance =
+                                secondLocation.distance(
+                                    from:
+                                        currentLocation
+                                )
+
+                            return firstDistance <
+                                secondDistance
+                        }
+
+                } else {
+
+                    sortedBreadcrumbs =
+                        breadcrumbs.sorted {
+
+                            ($0.wantToGoDate ??
+                                .distantPast)
+                            >
+                            ($1.wantToGoDate ??
+                                .distantPast)
+                        }
+                }
+
+
+                return sortedBreadcrumbs
                     .prefix(20)
                     .compactMap { breadcrumb in
 
                         guard let id =
                                 breadcrumb.id
                         else {
+
                             return nil
                         }
 
                         return (
                             id: id,
-                            name: breadcrumb.name,
-                            latitude: breadcrumb.latitude,
-                            longitude: breadcrumb.longitude,
+                            name:
+                                breadcrumb.name,
+                            latitude:
+                                breadcrumb.latitude,
+                            longitude:
+                                breadcrumb.longitude,
                             radius:
                                 breadcrumb.arrivalRadius?
                                     .doubleValue
@@ -251,18 +750,117 @@ final class WantToGoArrivalManager:
             }
         }
 
+        print("")
+        print(
+            "WantToGo destinations loaded for monitoring:",
+            breadcrumbData.count
+        )
+
+
+        // MARK: - Build Set Of Current Want-to-Go IDs
+
+        let currentIdentifiers =
+            Set(
+                breadcrumbData.map {
+                    $0.id.uuidString
+                }
+            )
+
+
+        // MARK: - Find Existing CLMonitor Conditions
+
+        let existingIdentifiers =
+            await monitor.identifiers
+
+
+        print(
+            "Existing monitored conditions before cleanup:",
+            existingIdentifiers.count
+        )
+
+
+        // MARK: - Remove Stale Geofences
+
+        let staleIdentifiers =
+            existingIdentifiers.filter {
+                !currentIdentifiers.contains(
+                    $0
+                )
+            }
+
+
+        print(
+            "Stale WantToGo geofences found:",
+            staleIdentifiers.count
+        )
+
+
+        for identifier
+            in staleIdentifiers {
+
+            print(
+                "Removing stale WantToGo geofence:",
+                identifier
+            )
+
+            await monitor.remove(
+                identifier
+            )
+        }
+
+
+        // MARK: - Add Current Want-to-Go Geofences
+
         for item in breadcrumbData {
 
             await addGeofence(
                 id: item.id,
                 name: item.name,
-                latitude: item.latitude,
-                longitude: item.longitude,
-                radius: item.radius
+                latitude:
+                    item.latitude,
+                longitude:
+                    item.longitude,
+                radius:
+                    item.radius
+            )
+        }
+
+
+        // MARK: - Verify Final Monitor State
+
+        let finalIdentifiers =
+            await monitor.identifiers
+
+
+        print("")
+        print(
+            "WantToGo geofence reconciliation complete."
+        )
+
+        print(
+            "Current WantToGo destinations:",
+            breadcrumbData.count
+        )
+
+        print(
+            "Stale geofences removed:",
+            staleIdentifiers.count
+        )
+
+        print(
+            "Final monitored condition count:",
+            finalIdentifiers.count
+        )
+
+        for identifier
+            in finalIdentifiers {
+
+            print(
+                "Final monitor identifier:",
+                identifier
             )
         }
     }
-
     // MARK: - Add Geofence From Breadcrumb
 
     func addGeofence(
@@ -322,9 +920,32 @@ final class WantToGoArrivalManager:
             identifier: identifier
         )
 
+        print("")
+        print("WantToGo geofence added")
+
         print(
-            "Monitoring Want-to-Go:",
-            name ?? identifier
+            "Name:",
+            name ?? "Unnamed"
+        )
+
+        print(
+            "Identifier:",
+            identifier
+        )
+
+        print(
+            "Latitude:",
+            latitude
+        )
+
+        print(
+            "Longitude:",
+            longitude
+        )
+
+        print(
+            "Radius:",
+            radius
         )
     }
 
@@ -345,31 +966,122 @@ final class WantToGoArrivalManager:
 
     // MARK: - Handle Monitor Event
 
+    // MARK: - Handle Monitor Event
+
     private func handle(
         _ event: CLMonitor.Event
     ) async {
 
-        guard event.state ==
-                .satisfied
-        else {
+        print("")
+        print("====================================")
+        print("WantToGo MONITOR EVENT")
+        print("====================================")
+
+        print(
+            "Identifier:",
+            event.identifier
+        )
+
+        print(
+            "Date:",
+            event.date
+        )
+
+        print(
+            "State:",
+            String(
+                describing: event.state
+            )
+        )
+
+        print(
+            "accuracyLimited:",
+            event.accuracyLimited
+        )
+
+        print(
+            "authorizationDenied:",
+            event.authorizationDenied
+        )
+
+        print(
+            "authorizationDeniedGlobally:",
+            event.authorizationDeniedGlobally
+        )
+
+        print(
+            "authorizationRequestInProgress:",
+            event.authorizationRequestInProgress
+        )
+
+        print(
+            "authorizationRestricted:",
+            event.authorizationRestricted
+        )
+
+        print(
+            "conditionLimitExceeded:",
+            event.conditionLimitExceeded
+        )
+
+        print(
+            "conditionUnsupported:",
+            event.conditionUnsupported
+        )
+
+        print(
+            "insufficientlyInUse:",
+            event.insufficientlyInUse
+        )
+
+        print(
+            "persistenceUnavailable:",
+            event.persistenceUnavailable
+        )
+
+        print(
+            "serviceSessionRequired:",
+            event.serviceSessionRequired
+        )
+
+        guard event.state == .satisfied else {
+
+            print(
+                "WantToGo condition is NOT satisfied."
+            )
+
             return
         }
+
+        print(
+            "WantToGo condition SATISFIED."
+        )
 
         guard let breadcrumbID =
-                UUID(
-                    uuidString:
-                        event.identifier
-                )
+            UUID(
+                uuidString: event.identifier
+            )
         else {
+
+            print(
+                "Invalid WantToGo monitor identifier:",
+                event.identifier
+            )
+
             return
         }
 
+        print(
+            "Sending arrival notification for:",
+            breadcrumbID
+        )
+
         await sendArrivalNotification(
-            breadcrumbID:
-                breadcrumbID
+            breadcrumbID: breadcrumbID
         )
     }
-
+    
+    
     // MARK: - Notification Actions
 
     private func registerNotificationCategory() {
@@ -485,6 +1197,11 @@ final class WantToGoArrivalManager:
 
             try await notificationCenter
                 .add(request)
+            
+            print(
+                "Arrival notification successfully submitted:",
+                breadcrumbID
+            )
 
         } catch {
 
@@ -533,7 +1250,7 @@ final class WantToGoArrivalManager:
 
             Task { @MainActor in
 
-                await self.confirmArrival(
+                await self.markAsVisited(
                     breadcrumbID:
                         breadcrumbID
                 )
@@ -547,9 +1264,25 @@ final class WantToGoArrivalManager:
         }
     }
 
-    // MARK: - Confirm Arrival
+    func markAsVisited(
+        _ breadcrumb: Breadcrumb
+    ) async {
 
-    private func confirmArrival(
+        guard let breadcrumbID = breadcrumb.id else {
+            print(
+                "Unable to mark Want-to-Go as visited: missing Breadcrumb ID."
+            )
+            return
+        }
+
+        await markAsVisited(
+            breadcrumbID: breadcrumbID
+        )
+    }
+    
+    // MARK: - Mark As Visited
+
+    private func markAsVisited(
         breadcrumbID: UUID
     ) async {
 
@@ -622,6 +1355,23 @@ final class WantToGoArrivalManager:
                 breadcrumbID:
                     breadcrumbID
             )
+
+            let notificationID =
+                "arrival-\(breadcrumbID.uuidString)"
+
+            notificationCenter
+                .removePendingNotificationRequests(
+                    withIdentifiers: [
+                        notificationID
+                    ]
+                )
+
+            notificationCenter
+                .removeDeliveredNotifications(
+                    withIdentifiers: [
+                        notificationID
+                    ]
+                )
         }
     }
 
