@@ -20,7 +20,6 @@ public struct RecentBreadcrumbsView: View {
 
     private let daysBack: Int = 30
     private let maxPins: Int = 100
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
     // Group Import/Export UI
     @State private var exportURL: URL?
@@ -55,181 +54,210 @@ public struct RecentBreadcrumbsView: View {
 
     public var body: some View {
 
-        ZStack {
+        GeometryReader { geometry in
 
-            Color(.systemGroupedBackground)
-                .ignoresSafeArea()
+            let isLandscape = geometry.size.width > geometry.size.height
 
-            VStack(spacing: 0) {
+            let tileSize: CGFloat = 110
+            let tileSpacing: CGFloat = 10
+            let horizontalPadding: CGFloat = 32
 
-                ScrollView {
+            let usableWidth =
+                geometry.size.width - horizontalPadding
 
-                    VStack(alignment: .leading, spacing: 10) {
-
-                        Text("Recent Pins")
-                            .font(.title2)
-                            .bold()
-                            .foregroundColor(.black)
-                            .padding(.horizontal)
-
-                        if recentPins.isEmpty {
-
-                            VStack(spacing: 12) {
-
-                                Image(systemName: "mappin.slash")
-                                    .font(.system(size: 42))
-                                    .foregroundStyle(.gray)
-
-                                Text("No recent pins.")
-                                    .font(.headline)
-                                    .foregroundStyle(.secondary)
-
-                                Text("Pins from the last \(daysBack) days will show here.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .frame(
-                                maxWidth: .infinity,
-                                minHeight: 320
-                            )
-                            .padding(.top, 40)
-
-                        } else {
-
-                            LazyVGrid(
-                                columns: columns,
-                                spacing: 10
-                            ) {
-
-                                ForEach(
-                                    recentPins,
-                                    id: \.objectID
-                                ) { breadcrumb in
-
-                                    Button {
-
-                                        navigationModel.pushBreadcrumbDetail(
-                                            in: recentPins,
-                                            selected: breadcrumb
-                                        )
-
-                                    } label: {
-
-                                        FavoriteCrumbTile(
-                                            breadcrumb: breadcrumb,
-                                            showHeart: breadcrumb.isFavorite
-                                        )
-                                        .environmentObject(
-                                            locationManager
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    .contextMenu {
-
-                                        if let group =
-                                            breadcrumb.value(
-                                                forKey: "crmGroup"
-                                            ) as? CrmGroup {
-
-                                            Button {
-
-                                                ExportManager.exportGroup(
-                                                    group
-                                                ) { url in
-
-                                                    DispatchQueue.main.async {
-
-                                                        exportURL = url
-
-                                                        if url != nil {
-
-                                                            showingShareSheet = true
-
-                                                        } else {
-
-                                                            transferError =
+            let columnCount = max(
+                3,
+                Int(
+                    (usableWidth + tileSpacing) /
+                    (tileSize + tileSpacing)
+                )
+            )
+            
+            let columns = Array(
+                repeating: GridItem(.fixed(tileSize), spacing: tileSpacing),
+                count: columnCount
+            )
+            
+            ZStack {
+                
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    
+                    ScrollView {
+                        
+                        VStack(alignment: .leading, spacing: 10) {
+                            
+                            Text("Recent Pins")
+                                .font(.title2)
+                                .bold()
+                                .foregroundColor(.black)
+                                .padding(.horizontal)
+                            
+                            if recentPins.isEmpty {
+                                
+                                VStack(spacing: 12) {
+                                    
+                                    Image(systemName: "mappin.slash")
+                                        .font(.system(size: 42))
+                                        .foregroundStyle(.gray)
+                                    
+                                    Text("No recent pins.")
+                                        .font(.headline)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    Text("Pins from the last \(daysBack) days will show here.")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(
+                                    maxWidth: .infinity,
+                                    minHeight: 320
+                                )
+                                .padding(.top, 40)
+                                
+                            } else {
+                                
+                                LazyVGrid(
+                                    columns: columns,
+                                    spacing: tileSpacing
+                                ) {
+                                    
+                                    ForEach(
+                                        recentPins,
+                                        id: \.objectID
+                                    ) { breadcrumb in
+                                        
+                                        Button {
+                                            
+                                            navigationModel.pushBreadcrumbDetail(
+                                                in: recentPins,
+                                                selected: breadcrumb
+                                            )
+                                            
+                                        } label: {
+                                            
+                                            FavoriteCrumbTile(
+                                                breadcrumb: breadcrumb,
+                                                showHeart: breadcrumb.isFavorite
+                                            )
+                                            .environmentObject(locationManager)
+                                            .frame(
+                                                width: tileSize,
+                                                height: tileSize
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                        
+                                        .contextMenu {
+                                            
+                                            if let group =
+                                                breadcrumb.value(
+                                                    forKey: "crmGroup"
+                                                ) as? CrmGroup {
+                                                
+                                                Button {
+                                                    
+                                                    ExportManager.exportGroup(
+                                                        group
+                                                    ) { url in
+                                                        
+                                                        DispatchQueue.main.async {
+                                                            
+                                                            exportURL = url
+                                                            
+                                                            if url != nil {
+                                                                
+                                                                showingShareSheet = true
+                                                                
+                                                            } else {
+                                                                
+                                                                transferError =
                                                                 "Export failed."
+                                                            }
                                                         }
                                                     }
+                                                    
+                                                } label: {
+                                                    
+                                                    Label(
+                                                        "Export Group",
+                                                        systemImage:
+                                                            "square.and.arrow.up"
+                                                    )
                                                 }
-
-                                            } label: {
-
-                                                Label(
-                                                    "Export Group",
-                                                    systemImage:
-                                                        "square.and.arrow.up"
-                                                )
                                             }
                                         }
                                     }
                                 }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                         }
+                        .padding(.vertical, 10)
                     }
-                    .padding(.vertical, 10)
+                    
+                    // MARK: - AdMob Banner
+                    
+                    if !isLandscape {
+                        WaymarXBannerView()
+                    }
+                    
+                    // MARK: - Bottom Navigation
+                    
+                    BottomNavigationBar(
+                        selectedTab: $selectedTab,
+                        
+                        onHome: {
+                            navigationModel.path = [.dashboard]
+                        },
+                        
+                        onDropCrumb: {
+                            navigationModel.path.append(
+                                .addBreadcrumb
+                            )
+                        },
+                        
+                        onGroups: {
+                            navigationModel.path.append(
+                                .groupsList
+                            )
+                        },
+                        
+                        onProfile: {
+                            navigationModel.path.append(
+                                .editProfile
+                            )
+                        },
+                        
+                        onWantToGoList: {
+                            navigationModel.path.append(
+                                .wantToGoList
+                            )
+                        },
+                        
+                        showHome: true,
+                        showDropCrumb: true,
+                        showMap: false,
+                        showGroups: true,
+                        showProfile: true,
+                        showWantToGoList: true
+                    )
+                    .frame(height: 70)
+                    .background(
+                        Color(.systemBackground)
+                    )
+                    .overlay(
+                        
+                        Rectangle()
+                            .frame(height: 1)
+                            .foregroundStyle(
+                                Color.black.opacity(0.08)
+                            ),
+                        
+                        alignment: .top
+                    )
                 }
-
-                // MARK: - AdMob Banner
-
-                WaymarXBannerView()
-
-                // MARK: - Bottom Navigation
-
-                BottomNavigationBar(
-                    selectedTab: $selectedTab,
-
-                    onHome: {
-                        navigationModel.path = [.dashboard]
-                    },
-
-                    onDropCrumb: {
-                        navigationModel.path.append(
-                            .addBreadcrumb
-                        )
-                    },
-
-                    onGroups: {
-                        navigationModel.path.append(
-                            .groupsList
-                        )
-                    },
-
-                    onProfile: {
-                        navigationModel.path.append(
-                            .editProfile
-                        )
-                    },
-
-                    onWantToGoList: {
-                        navigationModel.path.append(
-                            .wantToGoList
-                        )
-                    },
-
-                    showHome: true,
-                    showDropCrumb: true,
-                    showMap: false,
-                    showGroups: true,
-                    showProfile: true,
-                    showWantToGoList: true
-                )
-                .frame(height: 70)
-                .background(
-                    Color(.systemBackground)
-                )
-                .overlay(
-
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundStyle(
-                            Color.black.opacity(0.08)
-                        ),
-
-                    alignment: .top
-                )
             }
         }
 

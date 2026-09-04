@@ -120,43 +120,51 @@ struct AllBreadcrumbsView: View {
     
     // MARK: - Body
     var body: some View {
-        VStack(spacing: 0) {
-            Color(.systemBackground)
-                .ignoresSafeArea()
-                .overlay(alignment: .top) {
-                    VStack(spacing: 10) {
-                        searchBar
 
-                        List {
-                            ForEach(filteredBreadcrumbs, id: \.self) { breadcrumb in
-                                row(for: breadcrumb)
-                                    .listRowBackground(Color(.systemBackground))
+        GeometryReader { geometry in
+            
+            let isLandscape =
+            geometry.size.width > geometry.size.height
+            VStack(spacing: 0) {
+                Color(.systemBackground)
+                    .ignoresSafeArea()
+                    .overlay(alignment: .top) {
+                        VStack(spacing: 10) {
+                            searchBar
+                            
+                            List {
+                                ForEach(filteredBreadcrumbs, id: \.self) { breadcrumb in
+                                    row(for: breadcrumb)
+                                        .listRowBackground(Color(.systemBackground))
+                                }
+                                .onDelete(perform: showDeleteConfirmation)
                             }
-                            .onDelete(perform: showDeleteConfirmation)
+                            .listStyle(.plain)
                         }
-                        .listStyle(.plain)
+                        .padding(.top, 10)
                     }
-                    .padding(.top, 10)
+                
+                // MARK: - AdMob Banner
+                if !isLandscape {
+                    WaymarXBannerView()
                 }
-
-            // MARK: - AdMob Banner
-            WaymarXBannerView()
-
-            // Bottom Navigation Bar (unchanged)
-            BottomNavigationBar(
-                selectedTab: .constant(.home),
-                onHome: { navigationModel.path = [.dashboard] },
-                onDropCrumb: { navigationModel.path.append(.addBreadcrumb) },
-                onMap: { navigationModel.path.append(.groupCrumbMap(groupBreadcrumbs: Array(filteredBreadcrumbs))) },
-                onGroups: { navigationModel.path.append(.groupsList) },
-                onProfile: { navigationModel.path.append(.editProfile) },
-                showHome: true,
-                showDropCrumb: true,
-                showMap: true,
-                showGroups: true,
-                showProfile: true
-            )
-            .frame(height: 60)
+                
+                // Bottom Navigation Bar (unchanged)
+                BottomNavigationBar(
+                    selectedTab: .constant(.home),
+                    onHome: { navigationModel.path = [.dashboard] },
+                    onDropCrumb: { navigationModel.path.append(.addBreadcrumb) },
+                    onMap: { navigationModel.path.append(.groupCrumbMap(groupBreadcrumbs: Array(filteredBreadcrumbs))) },
+                    onGroups: { navigationModel.path.append(.groupsList) },
+                    onProfile: { navigationModel.path.append(.editProfile) },
+                    showHome: true,
+                    showDropCrumb: true,
+                    showMap: true,
+                    showGroups: true,
+                    showProfile: true
+                )
+                .frame(height: 60)
+            }
         }
         .navigationTitle(isSelecting ? "Select Pins" : "All Pins")
         .navigationBarTitleDisplayMode(.inline)

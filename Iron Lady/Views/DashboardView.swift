@@ -13,7 +13,7 @@ public struct DashboardView: View {
     @EnvironmentObject var navigationModel: NavigationModel
     @EnvironmentObject var locationManager: LocationManager
     @EnvironmentObject var breadcrumbStore: BreadcrumbStore
-
+    
     @FetchRequest(
         entity: Breadcrumb.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Breadcrumb.dateDropped, ascending: false)]
@@ -50,6 +50,7 @@ public struct DashboardView: View {
     @Binding var selectedTab: Tab
     @State private var showImporter = false
     @State private var importErrorMessage: String?
+    
 
     // MARK: - Constants
     private let unnamedPinName = "Unnamed Pin"
@@ -108,65 +109,74 @@ public struct DashboardView: View {
     }
 
     public var body: some View {
-        ZStack {
-            // Better default than pure white. Looks modern and makes cards feel real.
-            Color(.systemGroupedBackground).ignoresSafeArea()
-            VStack(spacing: 0) {
 
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+        GeometryReader { geometry in
 
-                        SectionCard {
-                            createRecentCrumbzSection()
+            let isLandscape = geometry.size.width > geometry.size.height
+
+            ZStack {
+                
+                Color(.systemGroupedBackground).ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 16) {
+                            
+                            SectionCard {
+                                createRecentCrumbzSection()
+                            }
+                            
+                            SectionCard {
+                                createFavoriteCrumbzSection(
+                                    availableWidth: geometry.size.width
+                                )
+                            }
+                            SectionCard {
+                                createGroupsSection()
+                            }
+                            
+                            // If this section is already a "card" internally, you can remove the wrapper
+                            // or keep it for consistent padding/styling.
+                            SectionCard {
+                                createUnnamedBreadcrumbsSection()
+                            }
                         }
-
-                        SectionCard {
-                            createFavoriteCrumbzSection()
-                        }
-
-                        SectionCard {
-                            createGroupsSection()
-                        }
-
-                        // If this section is already a "card" internally, you can remove the wrapper
-                        // or keep it for consistent padding/styling.
-                        SectionCard {
-                            createUnnamedBreadcrumbsSection()
-                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 14)
+                        .padding(.bottom, 18)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 14)
-                    .padding(.bottom, 18)
+                    // MARK: - AdMob Banner
+                    if !isLandscape {
+                        WaymarXBannerView()
+                    }
+                    
+                    // Bottom bar "docks" cleanly. Add a slight background to avoid floating-on-content look.
+                    // Bottom Navigation Bar
+                    BottomNavigationBar(
+                        selectedTab: $selectedTab,
+                        onHome: { navigationModel.path = [.dashboard] },
+                        onDropCrumb: { navigationModel.path.append(.addBreadcrumb) },
+                        onGroups: { navigationModel.path.append(.groupsList) },
+                        onProfile: { navigationModel.path.append(.editProfile) },
+                        onWantToGoList: { navigationModel.path.append(.wantToGoList) },
+                        showHome: false,
+                        showDropCrumb: true,
+                        showMap: false,
+                        showGroups: true,
+                        showProfile: true,
+                        showWantToGoList: true
+                        
+                    )
+                    .frame(height: 70)
+                    .background(Color(.systemBackground))
+                    .overlay(
+                        Rectangle()
+                            .frame(height: 1)
+                            .foregroundStyle(Color.black.opacity(0.08)),
+                        alignment: .top
+                    )
                 }
-                // MARK: - AdMob Banner
-                WaymarXBannerView()
-
-
-                // Bottom bar "docks" cleanly. Add a slight background to avoid floating-on-content look.
-                // Bottom Navigation Bar
-                BottomNavigationBar(
-                    selectedTab: $selectedTab,
-                    onHome: { navigationModel.path = [.dashboard] },
-                    onDropCrumb: { navigationModel.path.append(.addBreadcrumb) },
-                    onGroups: { navigationModel.path.append(.groupsList) },
-                    onProfile: { navigationModel.path.append(.editProfile) },
-                    onWantToGoList: { navigationModel.path.append(.wantToGoList) },
-                    showHome: false,
-                    showDropCrumb: true,
-                    showMap: false,
-                    showGroups: true,
-                    showProfile: true,
-                    showWantToGoList: true
-
-                )
-                .frame(height: 70)
-                .background(Color(.systemBackground))
-                .overlay(
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundStyle(Color.black.opacity(0.08)),
-                    alignment: .top
-                )
             }
         }
         .navigationTitle("Dashboard")
@@ -195,7 +205,7 @@ public struct DashboardView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                        Text("Home")
+                        Text("Quick Drop")
                             .font(.system(size: 16, weight: .semibold))
                     }
                     .foregroundStyle(.white)
@@ -384,9 +394,28 @@ public struct DashboardView: View {
         }
     }
 
-    private func createFavoriteCrumbzSection() -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+    private func createFavoriteCrumbzSection(
+        availableWidth: CGFloat
+    ) -> some View {
+        
+        let horizontalPadding: CGFloat = 60
+        let usableWidth = max(0, availableWidth - horizontalPadding)
 
+        let preferredTileWidth: CGFloat = 110
+        let tileSpacing: CGFloat = 10
+
+        let columnCount = max(
+            3,
+            Int(
+                (usableWidth + tileSpacing) /
+                (preferredTileWidth + tileSpacing)
+            )
+        )
+
+        let visibleFavoriteCount = columnCount * 2
+        
+        return VStack(alignment: .leading, spacing: 12) {
+            
             Button {
                 navigationModel.path.append(.favoritesBreadcrumbs)
             } label: {
@@ -407,10 +436,20 @@ public struct DashboardView: View {
             .buttonStyle(.plain)
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3),
-                spacing: 10
+                columns: Array(
+                    repeating: GridItem(
+                        .flexible(),
+                        spacing: tileSpacing
+                    ),
+                    count: columnCount
+                ),
+                spacing: tileSpacing
             ) {
-                ForEach(favoriteBreadcrumbs.prefix(6), id: \.objectID) { breadcrumb in
+                ForEach(
+                    favoriteBreadcrumbs.prefix(visibleFavoriteCount),
+                    id: \.objectID
+                ) { breadcrumb in
+
                     Button {
                         navigationModel.pushBreadcrumbDetail(in: favoriteBreadcrumbs, selected: breadcrumb)
                     } label: {
@@ -484,7 +523,8 @@ public struct DashboardView: View {
 
             // Header button = go to the Unnamed list screen (NOT a detail view)
             Button {
-                navigationModel.path.append(.unnamedBreadcrumbs(breadcrumbs: unnamedBreadcrumbs))
+                navigationModel.path.append(
+                    .unnamedBreadcrumbs)
             } label: {
                 HStack(spacing: 6) {
                     Text("UnNamed Pins")
@@ -552,6 +592,7 @@ public struct DashboardView: View {
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 }
+
 
 
 

@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var lastDroppedCrumbDate: String = "No Pin Dropped Yet"
     @State private var showPopup = false
+    @State private var showNamePinAlert = false
+    @State private var newPinName = ""
     @State private var showAddBreadcrumbView = false
     @State private var showCameraView = false
     @State private var countdown: Int = 5
@@ -75,17 +77,88 @@ struct ContentView: View {
         .onAppear {
             fetchLastDroppedCrumb()
         }
+        .alert(
+            "Name Pin",
+            isPresented: $showNamePinAlert
+        ) {
+
+            TextField(
+                "Pin Name",
+                text: $newPinName
+            )
+
+            Button("Cancel", role: .cancel) {
+                newPinName = ""
+            }
+
+            Button("Save") {
+                saveCurrentPinName()
+            }
+
+        } message: {
+            Text("Enter a name for this pin.")
+        }
         .sheet(isPresented: $showAddBreadcrumbView) {
             AddBreadcrumbView()
                 .environment(\.managedObjectContext, viewContext)
         }
         .sheet(isPresented: $showCameraView) {
+
             CameraView(selectedImage: $selectedImage) { image in
+
                 if let image = image {
+
                     attachPhotoToCurrentBreadcrumb(image)
+
+                    showCameraView = false
+
+                    DispatchQueue.main.asyncAfter(
+                        deadline: .now() + 0.3
+                    ) {
+                        newPinName = ""
+                        showNamePinAlert = true
+                    }
+
+                } else {
+
+                    showCameraView = false
                 }
-                showCameraView = false
             }
+        }
+    }
+    
+    private func saveCurrentPinName() {
+
+        guard let breadcrumb = currentBreadcrumb else {
+            return
+        }
+
+        let trimmedName = newPinName
+            .trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+
+        guard !trimmedName.isEmpty else {
+            return
+        }
+
+        breadcrumb.name = trimmedName
+
+        do {
+
+            try viewContext.save()
+
+            print(
+                "Pin named: \(trimmedName)"
+            )
+
+            newPinName = ""
+
+        } catch {
+
+            print(
+                "Failed to name Pin: \(error.localizedDescription)"
+            )
         }
     }
 
@@ -253,27 +326,45 @@ struct ContentView: View {
     }
     
     // MARK: - Popup View
+
     private var popupView: some View {
-        VStack(spacing: 20) {
+
+        VStack(spacing: 16) {
+
             Text("What would you like to do?")
                 .font(.headline)
                 .foregroundColor(Color("Dark Blue"))
 
-            HStack {
-                Button("Take Photo") {
-                    showCameraView = true
+            VStack(spacing: 12) {
+
+                Button {
                     showPopup = false
+                    showCameraView = true
+                } label: {
+                    Label(
+                        "Take Photo & Name Pin",
+                        systemImage: "camera"
+                    )
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
                 }
-                .padding()
                 .background(Color("Dark Orange"))
                 .foregroundColor(Color("Dark Blue"))
                 .cornerRadius(10)
 
-                Button("Add Info") {
-                    showAddBreadcrumbView = true
+                Button {
                     showPopup = false
+                    showAddBreadcrumbView = true
+                } label: {
+                    Label(
+                        "Add Info",
+                        systemImage: "info.circle"
+                    )
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
                 }
-                .padding()
                 .background(Color("Dark Orange"))
                 .foregroundColor(Color("Dark Blue"))
                 .cornerRadius(10)
@@ -282,7 +373,7 @@ struct ContentView: View {
             Button("Cancel") {
                 showPopup = false
             }
-            .padding(.top, 10)
+            .padding(.top, 4)
 
             Text("Closing in \(countdown)...")
                 .font(.footnote)
@@ -294,48 +385,99 @@ struct ContentView: View {
         .cornerRadius(20)
         .shadow(radius: 10)
     }
-
+    
     // MARK: - Drop Crumb (Only once)
     private func dropQuickCrumb() {
-        locationManager.requestLocation()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            guard let location = locationManager.currentLocation else {
-                print("Location not ready.")
+        locationManager.requestLocation { location in
+
+            guard let location else {
+
+                print(
+                    "Unable to get current location."
+                )
+
                 return
             }
 
-            let breadcrumb = Breadcrumb(context: viewContext)
-            breadcrumb.id = UUID()
-            breadcrumb.dateDropped = Date()
-            breadcrumb.latitude = location.latitude
-            breadcrumb.longitude = location.longitude
-            breadcrumb.name = "Unnamed Pin"
-            currentBreadcrumb = breadcrumb
+            DispatchQueue.main.async {
 
-            let locationObject = CLLocation(latitude: location.latitude, longitude: location.longitude)
-            locationManager.reverseGeocode(location: locationObject) { placemark in
-                breadcrumb.streetAddress = [placemark?.subThoroughfare ?? "", placemark?.thoroughfare ?? ""]
+                let breadcrumb = Breadcrumb(
+                    context: viewContext
+                )
+
+                breadcrumb.id = UUID()
+                breadcrumb.dateDropped = Date()
+
+                breadcrumb.latitude =
+                    location.coordinate.latitude
+
+                breadcrumb.longitude =
+                    location.coordinate.longitude
+                
+                print("""
+                📍 QUICK PIN LOCATION CAPTURED
+                Latitude: \(location.coordinate.latitude)
+                Longitude: \(location.coordinate.longitude)
+                Accuracy: \(location.horizontalAccuracy) meters
+                Timestamp: \(location.timestamp)
+                Age: \(Date().timeIntervalSince(location.timestamp)) seconds
+                """)
+
+                breadcrumb.name = "Unnamed Pin"
+
+                currentBreadcrumb = breadcrumb
+
+                let locationObject = CLLocation(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                )
+
+                locationManager.reverseGeocode(
+                    location: locationObject
+                ) { placemark in
+
+                    breadcrumb.streetAddress = [
+                        placemark?.subThoroughfare ?? "",
+                        placemark?.thoroughfare ?? ""
+                    ]
                     .filter { !$0.isEmpty }
                     .joined(separator: ",")
-                breadcrumb.city = placemark?.locality ?? "No City"
-                breadcrumb.state = placemark?.administrativeArea ?? "No State"
-                breadcrumb.zipCode = placemark?.postalCode ?? "No Zip"
 
-                do {
-                    try viewContext.save()
-                    lastDroppedCrumbDate = formattedDate(breadcrumb.dateDropped)
-                } catch {
-                    print("Failed to save Pin: \(error.localizedDescription)")
+                    breadcrumb.city =
+                        placemark?.locality ?? "No City"
+
+                    breadcrumb.state =
+                        placemark?.administrativeArea
+                        ?? "No State"
+
+                    breadcrumb.zipCode =
+                        placemark?.postalCode
+                        ?? "No Zip"
+
+                    do {
+
+                        try viewContext.save()
+
+                        lastDroppedCrumbDate =
+                            formattedDate(
+                                breadcrumb.dateDropped
+                            )
+
+                    } catch {
+
+                        print(
+                            "Failed to save Pin: \(error.localizedDescription)"
+                        )
+                    }
                 }
-            }
 
-            showPopup = true
-            countdown = 5
-            startCountdown()
+                showPopup = true
+                countdown = 10
+                startCountdown()
+            }
         }
     }
-
     // MARK: - Attach Photo to Existing Crumb
     private func attachPhotoToCurrentBreadcrumb(_ image: UIImage) {
         guard let breadcrumb = currentBreadcrumb else { return }
@@ -402,126 +544,3 @@ struct ContentView: View {
         return formatter.string(from: date)
     }
 }
-
-//Replaced on 01162026 - FOR MODERNIZATION
-//import SwiftUI
-//import CoreData
-//import CoreLocation
-//
-//struct ContentView: View {
-//    @EnvironmentObject var navigationModel: NavigationModel
-//    @Environment(\.managedObjectContext) private var viewContext
-//    @EnvironmentObject var locationManager: LocationManager
-//
-//    @State private var selectedImage: UIImage?
-//    @State private var lastDroppedCrumbDate: String = "No Pin Dropped Yet"
-//    @State private var showPopup = false
-//    @State private var showAddBreadcrumbView = false
-//    @State private var showCameraView = false
-//    @State private var countdown: Int = 5
-//    @State private var isUpdatingRecords: Bool = false
-//    @State private var updateProgress: Double = 0.0
-//    @State private var currentBreadcrumb: Breadcrumb? = nil
-//
-//    var body: some View {
-//        ZStack {
-//            Color.white //("Dark Blue")
-//                .edgesIgnoringSafeArea(.all)
-////            Image("SplashBackround")
-////                .resizable()
-////                .scaledToFill()
-////                .edgesIgnoringSafeArea(.all)
-//
-//            VStack(spacing: 20) {
-//                Spacer()
-//                Image("WaymarX Title Text")
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(width: 400, height: 200)
-//
-//                HStack {
-//                    Text("Last Pin: ")
-//                        .font(.custom("Marker Felt", size: 18))
-//                        .foregroundColor(Color("Light Blue"))
-//                    Text(lastDroppedCrumbDate)
-//                        .font(.custom("Marker Felt", size: 18))
-//                        .foregroundColor(Color("Light Blue"))
-//                        .italic()
-//                }
-//
-//                Button(action: {
-//                    dropQuickCrumb()
-//                }) {
-//                    VStack {
-//                        Image(systemName: "mappin.and.ellipse")
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: 100, height: 100)
-//                            .tint(Color("Dark Blue"))
-//                        Text("Mark the Spot")
-//                            .font(.custom("Marker Felt", size: 30))
-//                            .bold()
-//                            .foregroundColor(Color("Dark Blue"))
-//                    }
-//                    .frame(width: 300, height: 300)
-//                    .background(Color("Dark Orange"))
-//                    .cornerRadius(75)
-//                    .shadow(color: Color.white.opacity(0.4), radius: 5, x: 5, y: 5)
-//                }
-//                Spacer()
-//                Button(action: {
-//                    navigationModel.path.append(.dashboard)
-//                }) {
-//                    Text("Dashboard")
-//                        .font(.custom("Marker Felt", size: 24))
-//                        .frame(maxWidth: 300, maxHeight: 50)
-//                        .background(Color("Dark Orange"))
-//                        .foregroundColor(Color("Dark Blue"))
-//                        .bold()
-//                        .cornerRadius(25)
-//                        .shadow(color: Color.white.opacity(0.4), radius: 5, x: 5, y: 5)
-//
-//                }
-//                Spacer()
-//                Text("(c) 2025 - Binary Khaotix, Freedom Automation, Inc.")
-//                    .font(.custom("Marker Felt", size: 16))
-//                    .foregroundColor(Color("Light Blue"))
-//
-//
-//                if showPopup {
-//                    popupView
-//                }
-//            }
-//
-//            if isUpdatingRecords {
-//                VStack {
-//                    Text("Updating Records")
-//                        .font(.headline)
-//                        .foregroundColor(.white)
-//                        .padding(.bottom, 10)
-//                    ProgressView(value: updateProgress, total: 1.0)
-//                        .progressViewStyle(LinearProgressViewStyle(tint: Color("Dark Orange")))
-//                        .padding(.horizontal, 40)
-//                }
-//                .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                .background(Color.black.opacity(0.6).ignoresSafeArea())
-//            }
-//        }
-//        .navigationBarBackButtonHidden()
-//        .onAppear {
-//            performUpdates()
-//            fetchLastDroppedCrumb()
-//        }
-//        .sheet(isPresented: $showAddBreadcrumbView) {
-//            AddBreadcrumbView()
-//                .environment(\.managedObjectContext, viewContext)
-//        }
-//        .sheet(isPresented: $showCameraView) {
-//            CameraView(selectedImage: $selectedImage) { image in
-//                if let image = image {
-//                    attachPhotoToCurrentBreadcrumb(image)
-//                }
-//                showCameraView = false
-//            }
-//        }
-//    }

@@ -31,43 +31,51 @@ struct GroupsListView: View {
     @State private var groupPendingSwipeDelete: CrmGroup?
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(uniqueGroupNames(), id: \.self) { groupName in
-                        if let group = groups.first(where: { $0.groupName == groupName }) {
 
-                            SwipeToDeleteRow(
-                                isEnabled: !isEditing,
-                                onDeleteTapped: {
-                                    groupPendingSwipeDelete = group
-                                    showSingleDeleteConfirmation = true
+        GeometryReader { geometry in
+            
+            let isLandscape = geometry.size.width > geometry.size.height
+            
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 10) {
+                        ForEach(uniqueGroupNames(), id: \.self) { groupName in
+                            if let group = groups.first(where: { $0.groupName == groupName }) {
+                                
+                                SwipeToDeleteRow(
+                                    isEnabled: !isEditing,
+                                    onDeleteTapped: {
+                                        groupPendingSwipeDelete = group
+                                        showSingleDeleteConfirmation = true
+                                    }
+                                ) {
+                                    rowContent(for: group)
                                 }
-                            ) {
-                                rowContent(for: group)
                             }
                         }
                     }
+                    .padding()
                 }
-                .padding()
+                
+                // MARK: - AdMob Banner
+                if !isLandscape {
+                    WaymarXBannerView()
+                }
+                
+                BottomNavigationBar(
+                    selectedTab: $selectedTab,
+                    onHome: { navigationModel.path = [.dashboard] },
+                    onDropCrumb: { navigationModel.path.append(.addBreadcrumb) },
+                    onGroups: { navigationModel.path.append(.groupsList) },
+                    onProfile: { navigationModel.path.append(.editProfile) },
+                    showHome: true,
+                    showDropCrumb: true,
+                    showMap: false,
+                    showGroups: false,
+                    showProfile: true
+                )
+                .frame(height: 60)
             }
-
-            // MARK: - AdMob Banner
-            WaymarXBannerView()
-
-            BottomNavigationBar(
-                selectedTab: $selectedTab,
-                onHome: { navigationModel.path = [.dashboard] },
-                onDropCrumb: { navigationModel.path.append(.addBreadcrumb) },
-                onGroups: { navigationModel.path.append(.groupsList) },
-                onProfile: { navigationModel.path.append(.editProfile) },
-                showHome: true,
-                showDropCrumb: true,
-                showMap: false,
-                showGroups: false,
-                showProfile: true
-            )
-            .frame(height: 60)
         }
         .background(Color(.systemBackground)
             .ignoresSafeArea())

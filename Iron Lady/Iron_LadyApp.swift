@@ -95,8 +95,8 @@ struct IronLadyApp: App {
                             .environmentObject(navigationModel)
                             .environmentObject(locationManager)
 
-                    case .unnamedBreadcrumbs(let breadcrumbs):
-                        UnnamedPinsView(breadcrumbs: breadcrumbs)
+                    case .unnamedBreadcrumbs:
+                        UnnamedPinsView()
                             .environmentObject(navigationModel)
                             .environmentObject(locationManager)
 

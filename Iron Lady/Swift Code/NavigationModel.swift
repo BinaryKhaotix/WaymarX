@@ -45,7 +45,7 @@ enum NavigationDestination: Hashable {
     case breadcrumbDetailIDs(objectIDs: [NSManagedObjectID], startIndex: Int)
     case groupCrumbs(groupName: String)
     case groupsList
-    case unnamedBreadcrumbs(breadcrumbs: [Breadcrumb])
+    case unnamedBreadcrumbs
     case allBreadcrumbs
     case breadcrumbMap(breadcrumb: Breadcrumb)
     case editBreadcrumb(breadcrumb: Breadcrumb)

@@ -11,270 +11,453 @@ public struct UnnamedPinsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject var navigationModel: NavigationModel
     @EnvironmentObject var locationManager: LocationManager
-
-    public let breadcrumbs: [Breadcrumb]
-
+    
+    @FetchRequest(
+        sortDescriptors: [
+            NSSortDescriptor(
+                keyPath: \Breadcrumb.dateDropped,
+                ascending: false
+            )
+        ],
+        animation: .default
+    )
+    private var fetchedBreadcrumbs: FetchedResults<Breadcrumb>
+    
     // Group Import/Export UI
     @State private var exportURL: URL?
     @State private var showingShareSheet = false
     @State private var showingImportPicker = false
     @State private var transferError: String?
     @State private var selectedTab: Tab = .home
-
+    @State private var isSelecting = false
+    @State private var selectedBreadcrumbs: Set<NSManagedObjectID> = []
+    @State private var showDeleteAlert = false
+    
     private var regularBreadcrumbs: [Breadcrumb] {
-        breadcrumbs.filter { breadcrumb in
-            !breadcrumb.isWantToGo
+        
+        let unnamedPinName = "Unnamed Pin"
+        
+        return fetchedBreadcrumbs.filter { breadcrumb in
+            
+            guard !breadcrumb.isWantToGo else {
+                return false
+            }
+            
+            let name = (breadcrumb.name ?? "")
+                .trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
+            
+            return name.caseInsensitiveCompare(
+                unnamedPinName
+            ) == .orderedSame
         }
     }
     
     public var body: some View {
 
-        ZStack {
+        GeometryReader { geometry in
 
-            Color(.systemGroupedBackground)
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-
-                ScrollView {
-
-                    VStack(alignment: .leading, spacing: 12) {
-
-//                        Text("UnNamed Pins")
-//                            .font(.title2)
-//                            .bold()
-//                            .foregroundColor(Color("Dark Blue"))
-//                            .padding(.horizontal)
-
-                        Text("\(regularBreadcrumbs.count) Pin(s)")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .padding(.horizontal)
-
-                        LazyVGrid(
-                            columns: Array(
-                                repeating: GridItem(.flexible(), spacing: 10),
-                                count: 3
-                            ),
-                            spacing: 10
-                        ) {
-
-                            ForEach(regularBreadcrumbs, id: \.objectID) { breadcrumb in
-
-                                Button {
-
-                                    navigationModel.pushBreadcrumbDetail(
-                                        in: regularBreadcrumbs,
-                                        selected: breadcrumb
-                                    )
-
-                                } label: {
-
-                                    UnnamedPinTile(
-                                        breadcrumb: breadcrumb
-                                    )
-                                    .environmentObject(locationManager)
-                                }
-                                .buttonStyle(.plain)
-
-                                .contextMenu {
-
-                                    if let group =
-                                        breadcrumb.value(
-                                            forKey: "crmGroup"
-                                        ) as? CrmGroup {
-
-                                        Button {
-
-                                            ExportManager.exportGroup(
-                                                group
-                                            ) { url in
-
-                                                DispatchQueue.main.async {
-
-                                                    exportURL = url
-
-                                                    if url != nil {
-
-                                                        showingShareSheet = true
-
-                                                    } else {
-
-                                                        transferError =
-                                                            "Export failed."
+            let isLandscape = geometry.size.width > geometry.size.height
+            
+            ZStack {
+                
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    
+                    ScrollView {
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            
+                            //                        Text("UnNamed Pins")
+                            //                            .font(.title2)
+                            //                            .bold()
+                            //                            .foregroundColor(Color("Dark Blue"))
+                            //                            .padding(.horizontal)
+                            
+                            Text("\(regularBreadcrumbs.count) Pin(s)")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal)
+                            
+                            LazyVGrid(
+                                columns: Array(
+                                    repeating: GridItem(.flexible(), spacing: 10),
+                                    count: 3
+                                ),
+                                spacing: 10
+                            ) {
+                                
+                                ForEach(regularBreadcrumbs, id: \.objectID) { breadcrumb in
+                                    
+                                    Button {
+                                        
+                                        if isSelecting {
+                                            
+                                            if selectedBreadcrumbs.contains(breadcrumb.objectID) {
+                                                selectedBreadcrumbs.remove(breadcrumb.objectID)
+                                            } else {
+                                                selectedBreadcrumbs.insert(breadcrumb.objectID)
+                                            }
+                                            
+                                        } else {
+                                            
+                                            navigationModel.pushBreadcrumbDetail(
+                                                in: regularBreadcrumbs,
+                                                selected: breadcrumb
+                                            )
+                                        }
+                                        
+                                    } label: {
+                                        
+                                        ZStack(alignment: .topTrailing) {
+                                            
+                                            UnnamedPinTile(
+                                                breadcrumb: breadcrumb
+                                            )
+                                            .environmentObject(locationManager)
+                                            
+                                            if isSelecting {
+                                                
+                                                Image(
+                                                    systemName:
+                                                        selectedBreadcrumbs.contains(breadcrumb.objectID)
+                                                    ? "checkmark.circle.fill"
+                                                    : "circle"
+                                                )
+                                                .font(.system(size: 24, weight: .semibold))
+                                                .foregroundStyle(
+                                                    selectedBreadcrumbs.contains(breadcrumb.objectID)
+                                                    ? Color.accentColor
+                                                    : Color.white
+                                                )
+                                                .background(
+                                                    Circle()
+                                                        .fill(Color.black.opacity(0.25))
+                                                )
+                                                .padding(8)
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    
+                                    .contextMenu {
+                                        
+                                        if !isSelecting {
+                                            
+                                            if let group =
+                                                breadcrumb.value(
+                                                    forKey: "crmGroup"
+                                                ) as? CrmGroup {
+                                                
+                                                Button {
+                                                    
+                                                    ExportManager.exportGroup(
+                                                        group
+                                                    ) { url in
+                                                        
+                                                        DispatchQueue.main.async {
+                                                            
+                                                            exportURL = url
+                                                            
+                                                            if url != nil {
+                                                                showingShareSheet = true
+                                                            } else {
+                                                                transferError =
+                                                                "Export failed."
+                                                            }
+                                                        }
                                                     }
+                                                    
+                                                } label: {
+                                                    
+                                                    Label(
+                                                        "Export Group",
+                                                        systemImage:
+                                                            "square.and.arrow.up"
+                                                    )
                                                 }
                                             }
-
-                                        } label: {
-
-                                            Label(
-                                                "Export Group",
-                                                systemImage:
-                                                    "square.and.arrow.up"
-                                            )
+                                            
+                                            Button(
+                                                role: .destructive
+                                            ) {
+                                                
+                                                selectedBreadcrumbs = [
+                                                    breadcrumb.objectID
+                                                ]
+                                                
+                                                showDeleteAlert = true
+                                                
+                                            } label: {
+                                                
+                                                Label(
+                                                    "Delete Pin",
+                                                    systemImage: "trash"
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 8)
+                        .padding(.vertical)
                     }
-                    .padding(.vertical)
+                    
+                    // MARK: - AdMob Banner
+                    
+                    if !isLandscape {
+                        WaymarXBannerView()
+                    }
+                    
+                    // MARK: - Bottom Navigation
+                    
+                    BottomNavigationBar(
+                        selectedTab: $selectedTab,
+                        
+                        onHome: {
+                            navigationModel.path = [.dashboard]
+                        },
+                        
+                        onDropCrumb: {
+                            navigationModel.path.append(
+                                .addBreadcrumb
+                            )
+                        },
+                        
+                        onGroups: {
+                            navigationModel.path.append(
+                                .groupsList
+                            )
+                        },
+                        
+                        onProfile: {
+                            navigationModel.path.append(
+                                .editProfile
+                            )
+                        },
+                        
+                        onWantToGoList: {
+                            navigationModel.path.append(
+                                .wantToGoList
+                            )
+                        },
+                        
+                        showHome: true,
+                        showDropCrumb: true,
+                        showMap: false,
+                        showGroups: true,
+                        showProfile: true,
+                        showWantToGoList: true
+                    )
+                    .frame(height: 70)
+                    .background(
+                        Color(.systemBackground)
+                    )
+                    .overlay(
+                        
+                        Rectangle()
+                            .frame(height: 1)
+                            .foregroundStyle(
+                                Color.black.opacity(0.08)
+                            ),
+                        
+                        alignment: .top
+                    )
                 }
-
-                // MARK: - AdMob Banner
-
-                WaymarXBannerView()
-
-                // MARK: - Bottom Navigation
-
-                BottomNavigationBar(
-                    selectedTab: $selectedTab,
-
-                    onHome: {
-                        navigationModel.path = [.dashboard]
-                    },
-
-                    onDropCrumb: {
-                        navigationModel.path.append(
-                            .addBreadcrumb
-                        )
-                    },
-
-                    onGroups: {
-                        navigationModel.path.append(
-                            .groupsList
-                        )
-                    },
-
-                    onProfile: {
-                        navigationModel.path.append(
-                            .editProfile
-                        )
-                    },
-
-                    onWantToGoList: {
-                        navigationModel.path.append(
-                            .wantToGoList
-                        )
-                    },
-
-                    showHome: true,
-                    showDropCrumb: true,
-                    showMap: false,
-                    showGroups: true,
-                    showProfile: true,
-                    showWantToGoList: true
-                )
-                .frame(height: 70)
-                .background(
-                    Color(.systemBackground)
-                )
-                .overlay(
-
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundStyle(
-                            Color.black.opacity(0.08)
-                        ),
-
-                    alignment: .top
-                )
             }
         }
-
+        
         .navigationTitle("UnNamed Pins")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-
+        
         .toolbar {
-
+            
             ToolbarItem(
                 placement: .navigationBarLeading
             ) {
-
+                
                 Button {
-
+                    
                     navigationModel.pop()
-
+                    
                 } label: {
-
+                    
                     HStack {
-
+                        
                         Image(
                             systemName: "chevron.left"
                         )
                         .foregroundColor(.white)
-
+                        
                         Text("Back")
                             .foregroundColor(.white)
                     }
                 }
             }
-
-            ToolbarItem(
+            
+            ToolbarItemGroup(
                 placement: .navigationBarTrailing
             ) {
-
-                Button {
-
-                    showingImportPicker = true
-
-                } label: {
-
-                    Image(
-                        systemName:
-                            "square.and.arrow.down.on.square"
-                    )
-                    .foregroundColor(.white)
+                
+                if isSelecting {
+                    
+                    if !selectedBreadcrumbs.isEmpty {
+                        
+                        Button {
+                            
+                            showDeleteAlert = true
+                            
+                        } label: {
+                            
+                            Image(systemName: "trash")
+                                .font(
+                                    .system(
+                                        size: 18,
+                                        weight: .semibold
+                                    )
+                                )
+                                .foregroundStyle(.red)
+                        }
+                    }
+                    
+                    Button {
+                        
+                        withAnimation {
+                            isSelecting = false
+                            selectedBreadcrumbs.removeAll()
+                        }
+                        
+                    } label: {
+                        
+                        Image(systemName: "checkmark")
+                            .font(
+                                .system(
+                                    size: 18,
+                                    weight: .semibold
+                                )
+                            )
+                            .foregroundStyle(.white)
+                    }
+                    
+                } else {
+                    
+                    Button {
+                        
+                        withAnimation {
+                            isSelecting = true
+                        }
+                        
+                    } label: {
+                        
+                        Image(systemName: "checkmark.circle")
+                            .font(
+                                .system(
+                                    size: 18,
+                                    weight: .semibold
+                                )
+                            )
+                            .foregroundStyle(.white)
+                    }
+                    
+                    Button {
+                        
+                        showingImportPicker = true
+                        
+                    } label: {
+                        
+                        Image(
+                            systemName:
+                                "square.and.arrow.down.on.square"
+                        )
+                        .foregroundStyle(.white)
+                    }
                 }
             }
         }
-
+        
         .sheet(
             isPresented: $showingImportPicker
         ) {
-
+            
             DocumentPicker { pickedURL in
-
+                
                 do {
-
+                    
                     try ImportManager.importGroup(
                         from: pickedURL,
                         context: viewContext
                     )
-
+                    
                 } catch {
-
+                    
                     transferError =
-                        error.localizedDescription
+                    error.localizedDescription
                 }
             }
         }
-
+        
         .sheet(
             isPresented: $showingShareSheet
         ) {
-
+            
             if let exportURL {
-
+                
                 ShareSheet(
                     activityItems: [exportURL]
                 )
             }
         }
-
+        .alert(
+            selectedBreadcrumbs.count == 1
+            ? "Delete Pin?"
+            : "Delete \(selectedBreadcrumbs.count) Pins?",
+            isPresented: $showDeleteAlert
+        ) {
+            
+            Button(
+                "Cancel",
+                role: .cancel
+            ) {
+                // Do nothing
+            }
+            
+            Button(
+                "Delete",
+                role: .destructive
+            ) {
+                deleteSelectedBreadcrumbs()
+            }
+            
+        } message: {
+            
+            if selectedBreadcrumbs.count == 1 {
+                
+                Text(
+                    "This pin will be permanently deleted."
+                )
+                
+            } else {
+                
+                Text(
+                    "These \(selectedBreadcrumbs.count) pins will be permanently deleted."
+                )
+            }
+        }
         .alert(
             "Group Transfer",
-
+            
             isPresented: Binding(
-
+                
                 get: {
                     transferError != nil
                 },
-
+                
                 set: {
                     if !$0 {
                         transferError = nil
@@ -282,35 +465,50 @@ public struct UnnamedPinsView: View {
                 }
             )
         ) {
-
+            
             Button(
                 "OK",
                 role: .cancel
             ) {}
-
+            
         } message: {
-
+            
             Text(
                 transferError ?? ""
             )
         }
     }
+    private func deleteSelectedBreadcrumbs() {
+        
+        let objectsToDelete = regularBreadcrumbs.filter {
+            selectedBreadcrumbs.contains($0.objectID)
+        }
+        
+        withAnimation {
+            
+            for breadcrumb in objectsToDelete {
+                viewContext.delete(breadcrumb)
+            }
+            
+            do {
+                
+                try viewContext.save()
+                
+                selectedBreadcrumbs.removeAll()
+                isSelecting = false
+                
+            } catch {
+                
+                print(
+                    "Failed to delete unnamed pin(s): \(error.localizedDescription)"
+                )
+                
+                transferError =
+                "Unable to delete the selected pin(s). \(error.localizedDescription)"
+            }
+        }
+    }
 }
-
-// MARK: - Image Loader (local helper)
-//private func loadImage(from fileName: String) -> UIImage? {
-//    let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
-//        .appendingPathComponent(fileName)
-//
-//    guard let imageURL = url,
-//          let data = try? Data(contentsOf: imageURL),
-//          let image = UIImage(data: data) else {
-//        return nil
-//    }
-//
-//    return image
-//}
-
 
 // MARK: - Tile for Unnamed Pins (own style, heart only if favorite)
 private struct UnnamedPinTile: View {
