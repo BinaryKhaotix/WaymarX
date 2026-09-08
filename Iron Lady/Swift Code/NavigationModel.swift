@@ -57,6 +57,7 @@ enum NavigationDestination: Hashable {
     case recentBreadcrumbs
     case wantToGoMap
     case wantToGoList
+    case diagnostics
 }
 
 extension NavigationModel {

@@ -8,13 +8,16 @@
 import Foundation
 import CoreLocation
 import CoreData
+import UIKit
 import UserNotifications
 
 @MainActor
 final class WantToGoArrivalManager:
     NSObject,
-    CLLocationManagerDelegate,
+    ObservableObject,
+    @MainActor CLLocationManagerDelegate,
     UNUserNotificationCenterDelegate {
+
 
     static let shared = WantToGoArrivalManager()
 
@@ -35,7 +38,8 @@ final class WantToGoArrivalManager:
     private let fallbackNotificationDefaultsPrefix =
         "WantToGoFallbackNotification."
     
-    
+    private let diagnostics = DiagnosticsStore.shared
+        
     private override init() {
 
         super.init()
@@ -44,11 +48,186 @@ final class WantToGoArrivalManager:
         notificationCenter.delegate = self
 
         registerNotificationCategory()
+        
     }
 
+    // MARK: - In-App Arrival Prompt
+    struct ArrivalPrompt: Identifiable, Equatable {
+        let breadcrumbID: UUID
+        let destinationName: String
+
+        var id: UUID {
+            breadcrumbID
+        }
+    }
+
+    @Published var activeArrivalPrompt: ArrivalPrompt?
+    
+    func simulateArrival(
+        for breadcrumb: Breadcrumb
+    ) async {
+
+        guard let breadcrumbID = breadcrumb.id else {
+
+            diagnostics.log(
+                "Simulation failed: Breadcrumb has no UUID.",
+                category: "Error"
+            )
+
+            return
+        }
+
+        diagnostics.log(
+            "Simulating arrival for \(breadcrumb.name ?? "Unnamed").",
+            category: "Simulation"
+        )
+
+        await handleArrivalDetected(
+            breadcrumbID: breadcrumbID
+        )
+    }
+    
+    // MARK: - Arrival Detected
+
+    private func handleArrivalDetected(
+        breadcrumbID: UUID
+    ) async {
+
+        let context =
+            PersistenceController
+                .shared
+                .container
+                .newBackgroundContext()
+
+        let destinationName: String =
+            await context.perform {
+
+                let request: NSFetchRequest<Breadcrumb> =
+                    Breadcrumb.fetchRequest()
+
+                request.fetchLimit = 1
+
+                request.predicate =
+                    NSPredicate(
+                        format: "id == %@",
+                        breadcrumbID as CVarArg
+                    )
+
+                if let breadcrumb =
+                    try? context.fetch(request).first {
+
+                    return breadcrumb.name
+                        ?? "your destination"
+                }
+
+                return "your destination"
+            }
+        
+        diagnostics.log(
+            "Arrival detected at \(destinationName).",
+            category: "Arrival"
+        )
+        
+        diagnostics.recordArrival(
+            "\(destinationName) at \(Date().formatted(date: .omitted, time: .standard))"
+        )
+
+        let appState =
+            UIApplication.shared.applicationState
+
+        switch appState {
+
+        case .active:
+
+            diagnostics.updateAppState(
+                "Active"
+            )
+
+        case .inactive:
+
+            diagnostics.updateAppState(
+                "Inactive"
+            )
+
+        case .background:
+
+            diagnostics.updateAppState(
+                "Background"
+            )
+
+        @unknown default:
+
+            diagnostics.updateAppState(
+                "Unknown"
+            )
+        }
+        
+        diagnostics.log(
+            "Application state raw value: \(appState.rawValue)",
+            category: "App State"
+        )
+
+        if appState == .active {
+            activeArrivalPrompt =
+                ArrivalPrompt(
+                    breadcrumbID: breadcrumbID,
+                    destinationName: destinationName
+                )
+            
+            activeArrivalPrompt =
+                ArrivalPrompt(
+                    breadcrumbID: breadcrumbID,
+                    destinationName: destinationName
+                )
+
+            diagnostics.log(
+                "Foreground arrival prompt set.",
+                category: "Arrival"
+            )
+
+        } else {
+
+            diagnostics.log(
+                "App not active. Sending iOS arrival notification.",
+                category: "Notification"
+            )
+
+            // App is backgrounded / inactive.
+            // Fall back to the normal iOS notification.
+            await sendArrivalNotification(
+                breadcrumbID: breadcrumbID
+            )
+        }
+    }
+    
+    // MARK: - In-App Arrival Actions
+
+    func confirmActiveArrival() async {
+
+        guard let prompt = activeArrivalPrompt else {
+            return
+        }
+
+        activeArrivalPrompt = nil
+
+        await markAsVisited(
+            breadcrumbID: prompt.breadcrumbID
+        )
+    }
+
+    func dismissActiveArrival() {
+
+        activeArrivalPrompt = nil
+    }
+    
     // MARK: - Start
 
     func start() {
+
+        diagnostics.log(
+            "Want To Go arrival manager started.",
+            category: "Arrival"
+        )
 
         print("")
         print("====================================")
@@ -62,8 +241,9 @@ final class WantToGoArrivalManager:
             )
         )
 
-        requestNotificationPermission()
+        updateLocationAuthorizationDiagnostics()
 
+        requestNotificationPermission()
         requestLocationPermission()
 
         if CLLocationManager.significantLocationChangeMonitoringAvailable() {
@@ -71,22 +251,121 @@ final class WantToGoArrivalManager:
             locationManager
                 .startMonitoringSignificantLocationChanges()
 
+            diagnostics.updateFallbackRunning(
+                true
+            )
+
             print(
                 "WantToGo significant-location fallback started."
             )
 
         } else {
 
+            diagnostics.updateFallbackRunning(
+                false
+            )
+
             print(
                 "WantToGo significant-location monitoring unavailable."
             )
         }
-        
+
         Task {
+
+            await updateNotificationDiagnostics()
+
             await startMonitor()
         }
     }
+    
+    private func updateNotificationDiagnostics() async {
 
+        let settings =
+            await notificationCenter.notificationSettings()
+
+        switch settings.authorizationStatus {
+
+        case .authorized:
+
+            diagnostics.updateNotificationAuthorization(
+                "Authorized"
+            )
+
+        case .denied:
+
+            diagnostics.updateNotificationAuthorization(
+                "Denied"
+            )
+
+        case .notDetermined:
+
+            diagnostics.updateNotificationAuthorization(
+                "Not Determined"
+            )
+
+        case .provisional:
+
+            diagnostics.updateNotificationAuthorization(
+                "Provisional"
+            )
+
+        case .ephemeral:
+
+            diagnostics.updateNotificationAuthorization(
+                "Ephemeral"
+            )
+
+        @unknown default:
+
+            diagnostics.updateNotificationAuthorization(
+                "Unknown"
+            )
+        }
+    }
+    
+    private func updateLocationAuthorizationDiagnostics() {
+
+        switch locationManager.authorizationStatus {
+
+        case .authorizedAlways:
+
+            diagnostics.updateLocationAuthorization(
+                "Always"
+            )
+
+        case .authorizedWhenInUse:
+
+            diagnostics.updateLocationAuthorization(
+                "While Using"
+            )
+
+        case .denied:
+
+            diagnostics.updateLocationAuthorization(
+                "Denied"
+            )
+
+        case .restricted:
+
+            diagnostics.updateLocationAuthorization(
+                "Restricted"
+            )
+
+        case .notDetermined:
+
+            diagnostics.updateLocationAuthorization(
+                "Not Determined"
+            )
+
+        @unknown default:
+
+            diagnostics.updateLocationAuthorization(
+                "Unknown"
+            )
+        }
+    }
+
+    
     private func locationAuthorizationDescription(
         _ status: CLAuthorizationStatus
     ) -> String {
@@ -209,21 +488,49 @@ final class WantToGoArrivalManager:
 
         case .authorizedWhenInUse:
 
+            diagnostics.updateLocationAuthorization(
+                "While Using"
+            )
+
             manager
                 .requestAlwaysAuthorization()
 
         case .authorizedAlways:
 
+            diagnostics.updateLocationAuthorization(
+                "Always"
+            )
+
             Task {
+
                 await startMonitor()
             }
 
-        default:
+        case .denied:
 
-            break
+            diagnostics.updateLocationAuthorization(
+                "Denied"
+            )
+
+        case .restricted:
+
+            diagnostics.updateLocationAuthorization(
+                "Restricted"
+            )
+
+        case .notDetermined:
+
+            diagnostics.updateLocationAuthorization(
+                "Not Determined"
+            )
+
+        @unknown default:
+
+            diagnostics.updateLocationAuthorization(
+                "Unknown"
+            )
         }
     }
-
     private func getCurrentLocation() async -> CLLocation? {
 
         if let currentLocation =
@@ -253,6 +560,14 @@ final class WantToGoArrivalManager:
             return
         }
 
+        diagnostics.updateLocation(
+            latitude:
+                location.coordinate.latitude,
+            longitude:
+                location.coordinate.longitude,
+            accuracy:
+                location.horizontalAccuracy
+        )
 
         print("")
         print(
@@ -626,6 +941,39 @@ final class WantToGoArrivalManager:
                 .shared
                 .container
                 .newBackgroundContext()
+        
+        let totalWantToGoCount: Int =
+            await context.perform {
+
+                let request:
+                    NSFetchRequest<Breadcrumb> =
+                        Breadcrumb.fetchRequest()
+
+                request.predicate =
+                    NSPredicate(
+                        format: "isWantToGo == YES"
+                    )
+
+                do {
+
+                    return try context.count(
+                        for: request
+                    )
+
+                } catch {
+
+                    print(
+                        "Failed counting Want To Go pins:",
+                        error.localizedDescription
+                    )
+
+                    return 0
+                }
+            }
+
+        diagnostics.updateWantToGoCount(
+            totalWantToGoCount
+        )
 
 
         let breadcrumbData: [
@@ -740,7 +1088,17 @@ final class WantToGoArrivalManager:
                     }
 
             } catch {
+                Task { @MainActor in
 
+                    self.diagnostics.recordError(
+                        "Failed loading Want To Go pins: \(error.localizedDescription)"
+                    )
+
+                    self.diagnostics.log(
+                        "Failed loading Want To Go pins: \(error.localizedDescription)",
+                        category: "Error"
+                    )
+                }
                 print(
                     "Failed loading Want-to-Go pins:",
                     error.localizedDescription
@@ -771,7 +1129,11 @@ final class WantToGoArrivalManager:
 
         let existingIdentifiers =
             await monitor.identifiers
-
+        
+        diagnostics.log(
+            "CLMonitor currently contains \(existingIdentifiers.count) condition(s).",
+            category: "Geofence"
+        )
 
         print(
             "Existing monitored conditions before cleanup:",
@@ -831,6 +1193,62 @@ final class WantToGoArrivalManager:
         let finalIdentifiers =
             await monitor.identifiers
 
+        // MARK: - Update Geofence Diagnostics
+
+        let finalIdentifierSet =
+            Set(finalIdentifiers)
+
+        let diagnosticGeofences: [DiagnosticGeofence] =
+            breadcrumbData
+                .filter { item in
+
+                    finalIdentifierSet.contains(
+                        item.id.uuidString
+                    )
+                }
+                .map { item in
+
+                    let distance: Double?
+
+                    if let currentLocation {
+
+                        let destinationLocation =
+                            CLLocation(
+                                latitude: item.latitude,
+                                longitude: item.longitude
+                            )
+
+                        distance =
+                            currentLocation.distance(
+                                from: destinationLocation
+                            )
+
+                    } else {
+
+                        distance = nil
+                    }
+
+                    return DiagnosticGeofence(
+                        id: item.id,
+                        name:
+                            item.name
+                            ?? "Unnamed Destination",
+                        latitude: item.latitude,
+                        longitude: item.longitude,
+                        radius: item.radius,
+                        distance: distance,
+                        state: "Monitoring"
+                    )
+                }
+
+        diagnostics.updateGeofences(
+            diagnosticGeofences
+        )
+
+        diagnostics.log(
+            "Diagnostics updated with \(diagnosticGeofences.count) active geofence(s).",
+            category: "Geofence"
+        )
 
         print("")
         print(
@@ -864,6 +1282,7 @@ final class WantToGoArrivalManager:
     // MARK: - Add Geofence From Breadcrumb
 
     func addGeofence(
+        
         for breadcrumb: Breadcrumb
     ) async {
 
@@ -919,7 +1338,12 @@ final class WantToGoArrivalManager:
             condition,
             identifier: identifier
         )
-
+        
+        diagnostics.log(
+            "Monitoring \(name ?? identifier), radius \(Int(radius)) m (\(Int(radius * 3.28084)) ft).",
+            category: "Geofence"
+        )
+        
         print("")
         print("WantToGo geofence added")
 
@@ -962,9 +1386,11 @@ final class WantToGoArrivalManager:
         await monitor.remove(
             breadcrumbID.uuidString
         )
-    }
 
-    // MARK: - Handle Monitor Event
+        diagnostics.removeGeofence(
+            id: breadcrumbID
+        )
+    }
 
     // MARK: - Handle Monitor Event
 
@@ -972,115 +1398,57 @@ final class WantToGoArrivalManager:
         _ event: CLMonitor.Event
     ) async {
 
-        print("")
-        print("====================================")
-        print("WantToGo MONITOR EVENT")
-        print("====================================")
-
-        print(
-            "Identifier:",
-            event.identifier
+        diagnostics.log(
+            "Monitor event for \(event.identifier), state: \(event.state)",
+            category: "Geofence"
         )
 
-        print(
-            "Date:",
-            event.date
+        diagnostics.recordGeofenceEvent(
+            "\(event.identifier): \(event.state)"
         )
-
-        print(
-            "State:",
-            String(
-                describing: event.state
-            )
-        )
-
-        print(
-            "accuracyLimited:",
-            event.accuracyLimited
-        )
-
-        print(
-            "authorizationDenied:",
-            event.authorizationDenied
-        )
-
-        print(
-            "authorizationDeniedGlobally:",
-            event.authorizationDeniedGlobally
-        )
-
-        print(
-            "authorizationRequestInProgress:",
-            event.authorizationRequestInProgress
-        )
-
-        print(
-            "authorizationRestricted:",
-            event.authorizationRestricted
-        )
-
-        print(
-            "conditionLimitExceeded:",
-            event.conditionLimitExceeded
-        )
-
-        print(
-            "conditionUnsupported:",
-            event.conditionUnsupported
-        )
-
-        print(
-            "insufficientlyInUse:",
-            event.insufficientlyInUse
-        )
-
-        print(
-            "persistenceUnavailable:",
-            event.persistenceUnavailable
-        )
-
-        print(
-            "serviceSessionRequired:",
-            event.serviceSessionRequired
-        )
-
-        guard event.state == .satisfied else {
-
-            print(
-                "WantToGo condition is NOT satisfied."
-            )
-
-            return
-        }
-
-        print(
-            "WantToGo condition SATISFIED."
-        )
-
+        
         guard let breadcrumbID =
             UUID(
                 uuidString: event.identifier
             )
         else {
 
-            print(
-                "Invalid WantToGo monitor identifier:",
-                event.identifier
+            diagnostics.log(
+                "Monitor identifier was not a valid UUID.",
+                category: "Error"
             )
 
             return
         }
 
-        print(
-            "Sending arrival notification for:",
-            breadcrumbID
+        diagnostics.updateGeofenceState(
+            id: breadcrumbID,
+            state: "\(event.state)"
         )
 
-        await sendArrivalNotification(
+        guard event.state == .satisfied else {
+
+            diagnostics.log(
+                "Event ignored because condition is not satisfied.",
+                category: "Geofence"
+            )
+
+            return
+        }
+        diagnostics.updateGeofenceState(
+            id: breadcrumbID,
+            state: "\(event.state)"
+        )
+
+        diagnostics.log(
+            "Arrival condition satisfied for \(breadcrumbID.uuidString)",
+            category: "Arrival"
+        )
+
+        await handleArrivalDetected(
             breadcrumbID: breadcrumbID
         )
     }
-    
     
     // MARK: - Notification Actions
 
@@ -1123,6 +1491,7 @@ final class WantToGoArrivalManager:
                 [category]
             )
     }
+
 
     // MARK: - Send Arrival Notification
 
@@ -1195,15 +1564,21 @@ final class WantToGoArrivalManager:
 
         do {
 
-            try await notificationCenter
-                .add(request)
-            
-            print(
-                "Arrival notification successfully submitted:",
-                breadcrumbID
+            try await notificationCenter.add(
+                request
+            )
+
+            diagnostics.log(
+                "Arrival notification scheduled for \(destinationName).",
+                category: "Notification"
             )
 
         } catch {
+
+            diagnostics.log(
+                "Arrival notification failed: \(error.localizedDescription)",
+                category: "Error"
+            )
 
             print(
                 "Arrival notification failed:",
@@ -1285,6 +1660,11 @@ final class WantToGoArrivalManager:
     private func markAsVisited(
         breadcrumbID: UUID
     ) async {
+        
+        diagnostics.log(
+            "Marking breadcrumb as visited: \(breadcrumbID.uuidString)",
+            category: "Arrival"
+        )
 
         let context =
             PersistenceController
@@ -1351,9 +1731,21 @@ final class WantToGoArrivalManager:
 
         if converted {
 
+            diagnostics.log(
+                "Want To Go pin successfully converted to visited.",
+                category: "Arrival"
+            )
+            
             await removeGeofence(
                 breadcrumbID:
                     breadcrumbID
+            )
+            
+            diagnostics.updateWantToGoCount(
+                max(
+                    0,
+                    diagnostics.status.wantToGoCount - 1
+                )
             )
 
             let notificationID =

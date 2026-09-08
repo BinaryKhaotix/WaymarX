@@ -35,7 +35,7 @@
 		E3252E322D447313007E15D5 /* FavoriteCrumbTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3252E312D447313007E15D5 /* FavoriteCrumbTile.swift */; };
 		E3343C882F19C7440011C089 /* BreadcrumbStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3343C872F19C7440011C089 /* BreadcrumbStore.swift */; };
 		E345EECB2D0EB1E40012641A /* FullScreenImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */; };
-		E350B49B303906A700435068 /* BackupRestoreView.swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49A303906A700435068 /* BackupRestoreView.swift.swift */; };
+		E350B49B303906A700435068 /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49A303906A700435068 /* BackupRestoreView.swift */; };
 		E350B49D303919F700435068 /* WaymarXBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49C303919F700435068 /* WaymarXBackup.swift */; };
 		E350B49F30391A5200435068 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B49E30391A5200435068 /* BackupManager.swift */; };
 		E350B4A13039211A00435068 /* BackupShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E350B4A03039211A00435068 /* BackupShareSheet.swift */; };
@@ -59,6 +59,10 @@
 		E37655D2303533DF0094AFCB /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = E37655D1303533DF0094AFCB /* GoogleMobileAds */; };
 		E37655D43035361E0094AFCB /* AdMobConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37655D33035361E0094AFCB /* AdMobConsentManager.swift */; };
 		E37655D6303537700094AFCB /* WaymarXBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37655D5303537700094AFCB /* WaymarXBannerView.swift */; };
+		E38AC9E3304B5DB000EEBB98 /* DiagnosticsEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E2304B5DB000EEBB98 /* DiagnosticsEntry.swift */; };
+		E38AC9E5304B5DD500EEBB98 /* DiagnosticsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E4304B5DD500EEBB98 /* DiagnosticsStore.swift */; };
+		E38AC9E8304B5E9100EEBB98 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E7304B5E9100EEBB98 /* DiagnosticsView.swift */; };
+		E38AC9EA304B7FA200EEBB98 /* DiagnosticsStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E9304B7FA200EEBB98 /* DiagnosticsStatus.swift */; };
 		E38DDDD62D470D5F001B7311 /* CrmGroup+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD22D470D5F001B7311 /* CrmGroup+CoreDataClass.swift */; };
 		E38DDDD72D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD32D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift */; };
 		E38DDDD82D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DDDD42D470D5F001B7311 /* Breadcrumb+CoreDataClass.swift */; };
@@ -82,6 +86,10 @@
 		E3EC26DE3040A26C00BAC128 /* AllBreadcrumbExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */; };
 		E3EC26E03040E9AC00BAC128 /* DocumentExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */; };
 		E3EC6C722D43230D00915919 /* AddressUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC6C712D43230D00915919 /* AddressUpdater.swift */; };
+		E3FCBD64304A48A500171417 /* WantToGoArrivalBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */; };
+		E3FCBD67304A51BA00171417 /* ContextualTip.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD66304A51BA00171417 /* ContextualTip.swift */; };
+		E3FCBD69304A520B00171417 /* ContextualTipManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD68304A520B00171417 /* ContextualTipManager.swift */; };
+		E3FCBD6C304A524E00171417 /* ContextualTipBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD6B304A524E00171417 /* ContextualTipBannerView.swift */; };
 		E3FD7C772F1AC67900CE7EA6 /* UnnamedPinsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */; };
 		E3FD7C7A2F1B077500CE7EA6 /* RecentBreadcrumbsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */; };
 /* End PBXBuildFile section */
@@ -119,7 +127,7 @@
 		E3252E312D447313007E15D5 /* FavoriteCrumbTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteCrumbTile.swift; sourceTree = "<group>"; };
 		E3343C872F19C7440011C089 /* BreadcrumbStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadcrumbStore.swift; sourceTree = "<group>"; };
 		E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenImageView.swift; sourceTree = "<group>"; };
-		E350B49A303906A700435068 /* BackupRestoreView.swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift.swift; sourceTree = "<group>"; };
+		E350B49A303906A700435068 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
 		E350B49C303919F700435068 /* WaymarXBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXBackup.swift; sourceTree = "<group>"; };
 		E350B49E30391A5200435068 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
 		E350B4A03039211A00435068 /* BackupShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupShareSheet.swift; sourceTree = "<group>"; };
@@ -142,6 +150,10 @@
 		E368F1CB2D0D2C540014E9F1 /* relativeTimeString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = relativeTimeString.swift; sourceTree = "<group>"; };
 		E37655D33035361E0094AFCB /* AdMobConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConsentManager.swift; sourceTree = "<group>"; };
 		E37655D5303537700094AFCB /* WaymarXBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXBannerView.swift; sourceTree = "<group>"; };
+		E38AC9E2304B5DB000EEBB98 /* DiagnosticsEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsEntry.swift; sourceTree = "<group>"; };
+		E38AC9E4304B5DD500EEBB98 /* DiagnosticsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsStore.swift; sourceTree = "<group>"; };
+		E38AC9E7304B5E9100EEBB98 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
+		E38AC9E9304B7FA200EEBB98 /* DiagnosticsStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsStatus.swift; sourceTree = "<group>"; };
 		E38DDD9B2D47040F001B7311 /* Iron_Lady 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Iron_Lady 3.xcdatamodel"; sourceTree = "<group>"; };
 		E38DDDD22D470D5F001B7311 /* CrmGroup+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CrmGroup+CoreDataClass.swift"; sourceTree = "<group>"; };
 		E38DDDD32D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CrmGroup+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -166,6 +178,10 @@
 		E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllBreadcrumbExport.swift; sourceTree = "<group>"; };
 		E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExporter.swift; sourceTree = "<group>"; };
 		E3EC6C712D43230D00915919 /* AddressUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressUpdater.swift; sourceTree = "<group>"; };
+		E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoArrivalBanner.swift; sourceTree = "<group>"; };
+		E3FCBD66304A51BA00171417 /* ContextualTip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTip.swift; sourceTree = "<group>"; };
+		E3FCBD68304A520B00171417 /* ContextualTipManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTipManager.swift; sourceTree = "<group>"; };
+		E3FCBD6B304A524E00171417 /* ContextualTipBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTipBannerView.swift; sourceTree = "<group>"; };
 		E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnamedPinsView.swift; sourceTree = "<group>"; };
 		E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentBreadcrumbsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -189,6 +205,7 @@
 				E301249E304201AC0046364E /* WantToGoMapView.swift */,
 				E30124A0304201BD0046364E /* WantToGoListView.swift */,
 				E30124A230422F390046364E /* WantToGoImageManager.swift */,
+				E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */,
 			);
 			path = WantToGo;
 			sourceTree = "<group>";
@@ -257,6 +274,8 @@
 		E31748432D07AA2B00265372 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E38AC9E6304B5E6300EEBB98 /* DIAGNOSTIC VIEWS */,
+				E3FCBD6A304A522800171417 /* Context Tip Views */,
 				E301249D3042018F0046364E /* WantToGo */,
 				E3AFDE642F23154300F69826 /* ImageLoader.swift */,
 				E31748232D079C0C00265372 /* ContentView.swift */,
@@ -296,7 +315,7 @@
 				E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */,
 				E3AFDE622F22D17B00F69826 /* GroupMaintenanceView.swift */,
 				E37655D5303537700094AFCB /* WaymarXBannerView.swift */,
-				E350B49A303906A700435068 /* BackupRestoreView.swift.swift */,
+				E350B49A303906A700435068 /* BackupRestoreView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -304,6 +323,8 @@
 		E31748442D07AA5A00265372 /* Swift Code */ = {
 			isa = PBXGroup;
 			children = (
+				E38AC9E1304B5D4800EEBB98 /* DIAGNOSTICS */,
+				E3FCBD65304A51A900171417 /* Context Tips */,
 				E30124A43042476B0046364E /* WantToGo */,
 				E366BA5A2D8B7307004D5FA4 /* ImportExport */,
 				E317482A2D079C0F00265372 /* Persistence.swift */,
@@ -337,6 +358,41 @@
 				E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */,
 			);
 			path = ImportExport;
+			sourceTree = "<group>";
+		};
+		E38AC9E1304B5D4800EEBB98 /* DIAGNOSTICS */ = {
+			isa = PBXGroup;
+			children = (
+				E38AC9E2304B5DB000EEBB98 /* DiagnosticsEntry.swift */,
+				E38AC9E4304B5DD500EEBB98 /* DiagnosticsStore.swift */,
+				E38AC9E9304B7FA200EEBB98 /* DiagnosticsStatus.swift */,
+			);
+			path = DIAGNOSTICS;
+			sourceTree = "<group>";
+		};
+		E38AC9E6304B5E6300EEBB98 /* DIAGNOSTIC VIEWS */ = {
+			isa = PBXGroup;
+			children = (
+				E38AC9E7304B5E9100EEBB98 /* DiagnosticsView.swift */,
+			);
+			path = "DIAGNOSTIC VIEWS";
+			sourceTree = "<group>";
+		};
+		E3FCBD65304A51A900171417 /* Context Tips */ = {
+			isa = PBXGroup;
+			children = (
+				E3FCBD66304A51BA00171417 /* ContextualTip.swift */,
+				E3FCBD68304A520B00171417 /* ContextualTipManager.swift */,
+			);
+			path = "Context Tips";
+			sourceTree = "<group>";
+		};
+		E3FCBD6A304A522800171417 /* Context Tip Views */ = {
+			isa = PBXGroup;
+			children = (
+				E3FCBD6B304A524E00171417 /* ContextualTipBannerView.swift */,
+			);
+			path = "Context Tip Views";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -417,6 +473,7 @@
 				E3E588692FD0BAFC00C86A6D /* ExportManager.swift in Sources */,
 				E38DDDD92D470D5F001B7311 /* Breadcrumb+CoreDataProperties.swift in Sources */,
 				E3195F56303FACCF0062482E /* BackupDocumentExporter.swift in Sources */,
+				E3FCBD69304A520B00171417 /* ContextualTipManager.swift in Sources */,
 				E368F1C82D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift in Sources */,
 				E317483A2D079EDA00265372 /* AddBreadcrumbView.swift in Sources */,
 				E366BA632D8B75F3004D5FA4 /* ImportManager.swift in Sources */,
@@ -442,11 +499,13 @@
 				E3AFDE652F23154500F69826 /* ImageLoader.swift in Sources */,
 				E317482B2D079C0F00265372 /* Persistence.swift in Sources */,
 				E31748242D079C0C00265372 /* ContentView.swift in Sources */,
+				E3FCBD6C304A524E00171417 /* ContextualTipBannerView.swift in Sources */,
 				E31748222D079C0C00265372 /* Iron_LadyApp.swift in Sources */,
 				E3AC33042D36F64800ADAFFE /* GroupCrumbMapView.swift in Sources */,
 				E30124A1304201BD0046364E /* WantToGoListView.swift in Sources */,
 				E37655D6303537700094AFCB /* WaymarXBannerView.swift in Sources */,
 				E3EC26DE3040A26C00BAC128 /* AllBreadcrumbExport.swift in Sources */,
+				E3FCBD64304A48A500171417 /* WantToGoArrivalBanner.swift in Sources */,
 				E31748462D07AA8F00265372 /* BreadcrumbTileView.swift in Sources */,
 				E30EBFCF2D163AF00052A791 /* EditProfileView.swift in Sources */,
 				E366B5B02D125BA10038597C /* CrumbUser+CoreDataProperties.swift in Sources */,
@@ -458,8 +517,10 @@
 				E3C8E5512D0B5963005B9F0B /* GroupCrumbsView.swift in Sources */,
 				E3195F54303FA51A0062482E /* WaymarXBackupType.swift in Sources */,
 				E3AE91712D38722800CA6129 /* BreadcrumbNavigationView.swift in Sources */,
-				E350B49B303906A700435068 /* BackupRestoreView.swift.swift in Sources */,
+				E350B49B303906A700435068 /* BackupRestoreView.swift in Sources */,
 				E317483C2D079FCC00265372 /* ImagePicker.swift in Sources */,
+				E38AC9E5304B5DD500EEBB98 /* DiagnosticsStore.swift in Sources */,
+				E38AC9E8304B5E9100EEBB98 /* DiagnosticsView.swift in Sources */,
 				E3C8E5552D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift in Sources */,
 				E366B59E2D124E7F0038597C /* AddUserView.swift in Sources */,
 				E3C8E5532D0B5982005B9F0B /* UnnamedCrumbsView.swift in Sources */,
@@ -467,6 +528,7 @@
 				E3E61D012D14EB53006FA68D /* BottomNavigationBar.swift in Sources */,
 				E366BA672D8B7AE6004D5FA4 /* ShareSheetHelper.swift in Sources */,
 				E3C8E54D2D0B5926005B9F0B /* TileContainerView.swift in Sources */,
+				E38AC9E3304B5DB000EEBB98 /* DiagnosticsEntry.swift in Sources */,
 				E350B49F30391A5200435068 /* BackupManager.swift in Sources */,
 				E368F1CA2D0D22630014E9F1 /* SingleRowTileContainerView.swift in Sources */,
 				E38DDDD62D470D5F001B7311 /* CrmGroup+CoreDataClass.swift in Sources */,
@@ -484,8 +546,10 @@
 				E366B59A2D1239AF0038597C /* BreadcrumbRowView.swift in Sources */,
 				E350B49D303919F700435068 /* WaymarXBackup.swift in Sources */,
 				E3AFDE632F22D17B00F69826 /* GroupMaintenanceView.swift in Sources */,
+				E38AC9EA304B7FA200EEBB98 /* DiagnosticsStatus.swift in Sources */,
 				E366B59C2D124E070038597C /* LoginView.swift in Sources */,
 				E317482E2D079C0F00265372 /* Iron_Lady.xcdatamodeld in Sources */,
+				E3FCBD67304A51BA00171417 /* ContextualTip.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

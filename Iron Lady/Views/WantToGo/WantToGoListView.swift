@@ -57,41 +57,32 @@ struct WantToGoListView: View {
                 listContent
             }
         }
-        .navigationTitle("Want to Go")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        
+        .onAppear {
+
+            ContextualTipManager.shared.showIfNeeded(
+                .wantToGoPromotion
+            )
+        }
+        
         .toolbarBackground(
             Color("Dark Blue"),
             for: .navigationBar
         )
+        
         .toolbarBackground(
             .visible,
             for: .navigationBar
         )
+        
         .toolbarColorScheme(
             .dark,
             for: .navigationBar
         )
         
-        .navigationTitle("Want to Go")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        
-        .toolbarBackground(
-            Color("Dark Blue"),
-            for: .navigationBar
-        )
-        .toolbarBackground(
-            .visible,
-            for: .navigationBar
-        )
-        
         .toolbar {
-            
             // Left: Back
             ToolbarItem(placement: .navigationBarLeading) {
                 

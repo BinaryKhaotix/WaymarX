@@ -50,7 +50,9 @@ public struct DashboardView: View {
     @Binding var selectedTab: Tab
     @State private var showImporter = false
     @State private var importErrorMessage: String?
-    
+    @State private var showArrivalNotificationTip = false
+
+
 
     // MARK: - Constants
     private let unnamedPinName = "Unnamed Pin"
@@ -185,11 +187,10 @@ public struct DashboardView: View {
         .onAppear {
             configureNavigationBarAppearance()
             breadcrumbStore.breadcrumbs = Array(breadcrumbs)
-
-            // (Optional) debug
-            // for breadcrumb in breadcrumbs {
-            //     print("Breadcrumb Name: \(breadcrumb.name ?? "Unnamed Pin"), Group: \(breadcrumb.crmGroup?.groupName ?? "No Group")")
-            // }
+            
+            ContextualTipManager.shared.showIfNeeded(
+                .arrivalNotificationActions
+            )
         }
         .onChange(of: breadcrumbs.count) {
             withAnimation(.easeInOut(duration: 0.2)) {

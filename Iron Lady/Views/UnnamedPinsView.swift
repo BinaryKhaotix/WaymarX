@@ -271,7 +271,11 @@ public struct UnnamedPinsView: View {
                 }
             }
         }
-        
+        .onAppear{
+            ContextualTipManager.shared.showIfNeeded(
+                .unsavedPins
+            )
+        }
         .navigationTitle("UnNamed Pins")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)

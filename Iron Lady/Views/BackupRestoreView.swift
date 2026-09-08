@@ -110,6 +110,12 @@ struct BackupRestoreView: View {
                     .foregroundStyle(.secondary)
                 }
             }
+            .onAppear {
+
+                ContextualTipManager.shared.showIfNeeded(
+                    .backupRestore
+                )
+            }
             .navigationTitle("Backup & Restore")
             .navigationBarTitleDisplayMode(.inline)
             

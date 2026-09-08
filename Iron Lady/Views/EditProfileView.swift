@@ -155,6 +155,33 @@ struct EditProfileView: View {
                                 ? Date(timeIntervalSince1970: lastWaymarXBackupDate)
                                 : nil
                     )
+                    
+                    Button {
+
+                        navigationModel.path.append(
+                            .diagnostics
+                        )
+
+                    } label: {
+
+                        HStack {
+
+                            Image(
+                                systemName:
+                                    "waveform.path.ecg.rectangle"
+                            )
+
+                            Text("Diagnostics")
+
+                            Spacer()
+
+                            Image(
+                                systemName: "chevron.right"
+                            )
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                    
                     if adMobConsentManager.privacyOptionsRequired {
                         
                         VStack(alignment: .leading, spacing: 12) {
