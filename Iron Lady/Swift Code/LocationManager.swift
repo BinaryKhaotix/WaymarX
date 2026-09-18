@@ -12,6 +12,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let geocoder = CLGeocoder()
     
     private var locationCompletion: ((CLLocation?) -> Void)?
+    private var manualRefreshInProgress = false
     
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var streetAddress: String = "No Address"
@@ -37,6 +38,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func requestLocation() {
+        
+        print("🔵 LocationManager.requestLocation() CALLED")
+        print("🔵 Authorization: \(locationManager.authorizationStatus.rawValue)")
+        
+
         locationManager.requestLocation()
     }
     
@@ -45,6 +51,20 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     ) {
         locationCompletion = completion
         locationManager.requestLocation()
+    }
+    
+    func refreshLocation() {
+
+        print("🔵 refreshLocation() CALLED")
+
+        locationManager.stopUpdatingLocation()
+        
+        manualRefreshInProgress = true
+
+        locationManager.distanceFilter = kCLDistanceFilterNone
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+
+        locationManager.startUpdatingLocation()
     }
     
     func reverseGeocode(location: CLLocation, completion: @escaping (CLPlacemark?) -> Void) {
@@ -64,17 +84,44 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
-        
+
         guard let location = locations.last else {
             return
         }
-        
+
+        print("🟢 didUpdateLocations CALLED: \(Date())")
+
+        print("""
+        📍 Fresh Location
+        Latitude: \(location.coordinate.latitude)
+        Longitude: \(location.coordinate.longitude)
+        Accuracy: \(location.horizontalAccuracy)
+        Timestamp: \(location.timestamp)
+        """)
+
         DispatchQueue.main.async {
-            
+
             self.currentLocation = location.coordinate
-            
+
             self.locationCompletion?(location)
             self.locationCompletion = nil
+
+            DiagnosticsStore.shared.updateLocation(
+                latitude: location.coordinate.latitude,
+                longitude: location.coordinate.longitude,
+                accuracy: location.horizontalAccuracy
+            )
+            
+            if self.manualRefreshInProgress {
+
+                self.manualRefreshInProgress = false
+
+                // Restore normal operating behavior
+                self.locationManager.distanceFilter = 10
+
+                print("🛑 Manual location refresh complete")
+            }
+
         }
     }
     

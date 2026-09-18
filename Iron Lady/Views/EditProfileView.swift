@@ -60,14 +60,6 @@ struct EditProfileView: View {
 
     private var user: CrumbUser? { users.first }
 
-    private var preferredScheme: ColorScheme? {
-        switch appColorScheme {
-        case "light": return .light
-        case "dark":  return .dark
-        default:      return nil // system
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
 
@@ -237,7 +229,7 @@ struct EditProfileView: View {
             }
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .preferredColorScheme(preferredScheme) // ✅ overrides device setting when not "system"
+//        .preferredColorScheme(preferredScheme) // ✅ overrides device setting when not "system"
         .navigationTitle("Edit Profile")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)

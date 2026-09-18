@@ -581,16 +581,28 @@ public struct DashboardView: View {
             }
         }
     }
-
-    // MARK: - Nav bar appearance
+    
+    // MARK: - Nav Bar Appearance
 
     private func configureNavigationBarAppearance() {
+
         let appearance = UINavigationBarAppearance()
+
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(named: "Dark Blue")
-        appearance.titleTextAttributes = [.foregroundColor: UIColor(named: "Light Orange") ?? .white]
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+
+        appearance.backgroundColor =
+            UIColor(named: "Dark Blue")
+
+        appearance.titleTextAttributes = [
+            .foregroundColor:
+                UIColor(named: "Light Orange") ?? .white
+        ]
+
+        UINavigationBar.appearance()
+            .standardAppearance = appearance
+
+        UINavigationBar.appearance()
+            .scrollEdgeAppearance = appearance
     }
 }
 

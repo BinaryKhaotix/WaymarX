@@ -9,10 +9,11 @@ import SwiftUI
 import UIKit
 
 struct DiagnosticsView: View {
+    @EnvironmentObject var diagnosticsStore: DiagnosticsStore
+    @EnvironmentObject var locationManager: LocationManager
 
-    @EnvironmentObject var diagnosticsStore:
-        DiagnosticsStore
-    
+    @Environment(\.dismiss) private var dismiss
+
 
     var body: some View {
 
@@ -31,42 +32,69 @@ struct DiagnosticsView: View {
             }
             .padding()
         }
+        .refreshable {
 
+            print("🟠 DIAGNOSTICS PULL REFRESH CALLED")
+
+            diagnosticsStore.log(
+                "Manual diagnostics refresh requested",
+                category: "Diagnostics"
+            )
+
+            locationManager.refreshLocation()
+        }
         .navigationTitle("Diagnostics")
-
+        .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
+
+        .onAppear {
+            configureNavigationBarAppearance()
+        }
 
         .toolbar {
 
+            // Left: Custom Back Button
+            ToolbarItem(placement: .navigationBarLeading) {
+
+                Button {
+                    dismiss()
+                } label: {
+
+                    HStack(spacing: 6) {
+
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+
+                        Text("Profile")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                }
+            }
+
+            // Right: Actions
             ToolbarItemGroup(
-                placement:
-                    .navigationBarTrailing
+                placement: .navigationBarTrailing
             ) {
 
                 Button {
-
                     copyDiagnostics()
-
                 } label: {
 
-                    Image(
-                        systemName:
-                            "doc.on.doc"
-                    )
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
                 }
 
-                Button(
-                    role: .destructive
-                ) {
+                Button(role: .destructive) {
 
                     diagnosticsStore.clear()
 
                 } label: {
 
-                    Image(
-                        systemName:
-                            "trash"
-                    )
+                    Image(systemName: "trash")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
                 }
             }
         }
@@ -149,7 +177,7 @@ struct DiagnosticsView: View {
 
             DiagnosticValueRow(
                 title:
-                    "Last Location",
+                    "Location Updated",
                 value:
                     formattedDate(
                         diagnosticsStore
@@ -603,6 +631,29 @@ private struct DiagnosticValueRow:
                 )
         }
     }
+}
+
+// MARK: - Nav Bar Appearance
+
+private func configureNavigationBarAppearance() {
+
+    let appearance = UINavigationBarAppearance()
+
+    appearance.configureWithOpaqueBackground()
+
+    appearance.backgroundColor =
+        UIColor(named: "Dark Blue")
+
+    appearance.titleTextAttributes = [
+        .foregroundColor:
+            UIColor(named: "Light Orange") ?? .white
+    ]
+
+    UINavigationBar.appearance()
+        .standardAppearance = appearance
+
+    UINavigationBar.appearance()
+        .scrollEdgeAppearance = appearance
 }
 
 

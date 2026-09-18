@@ -29,6 +29,23 @@ struct IronLadyApp: App {
 
     @State private var showSplash = true
 
+    @AppStorage("appColorScheme")
+    private var appColorScheme: String = "system"
+
+    private var preferredScheme: ColorScheme? {
+        switch appColorScheme {
+        case "light":
+            return .light
+
+        case "dark":
+            return .dark
+
+        default:
+            return nil
+        }
+    }
+
+    
     init() {
 
         WantToGoArrivalManager.shared.start()
@@ -59,7 +76,7 @@ struct IronLadyApp: App {
                         .environmentObject(navigationModel)
                         .environmentObject(locationManager)
                         .environmentObject(breadcrumbStore)
-
+                        .preferredColorScheme(preferredScheme)
                         .navigationDestination(
                             for: NavigationDestination.self
                         ) { destination in
