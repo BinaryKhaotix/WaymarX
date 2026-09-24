@@ -19,6 +19,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var city: String = "No City"
     @Published var state: String = "No State"
     @Published var zipCode: String = "No Zip"
+    @Published private(set) var latestLocation: CLLocation?
     
     override init() {
         super.init()
@@ -49,10 +50,50 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func requestLocation(
         completion: @escaping (CLLocation?) -> Void
     ) {
+
+        print("🔵 LocationManager.requestLocation(completion:) CALLED")
+
+        // First try the most recent location Core Location already has.
+        if let location = locationManager.location {
+
+            let age = Date().timeIntervalSince(
+                location.timestamp
+            )
+
+            let accuracy = location.horizontalAccuracy
+
+            print("""
+            📍 Existing Location Available
+
+            Latitude: \(location.coordinate.latitude)
+            Longitude: \(location.coordinate.longitude)
+            Accuracy: \(accuracy) meters
+            Age: \(age) seconds
+            """)
+
+            // For Mark the Spot, a recent and reasonably accurate
+            // location is better than making the user wait for GPS.
+            if age <= 15 &&
+                accuracy > 0 &&
+                accuracy <= 25 {
+
+                print(
+                    "✅ Using existing recent location"
+                )
+
+                completion(location)
+                return
+            }
+        }
+
+        print(
+            "📡 Existing location unsuitable. Requesting fresh location."
+        )
+
         locationCompletion = completion
+
         locationManager.requestLocation()
     }
-    
     func refreshLocation() {
 
         print("🔵 refreshLocation() CALLED")
@@ -101,27 +142,38 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
 
-            self.currentLocation = location.coordinate
+            self.currentLocation =
+                location.coordinate
+
+            self.latestLocation =
+                location
 
             self.locationCompletion?(location)
-            self.locationCompletion = nil
+
+            self.locationCompletion =
+                nil
 
             DiagnosticsStore.shared.updateLocation(
-                latitude: location.coordinate.latitude,
-                longitude: location.coordinate.longitude,
-                accuracy: location.horizontalAccuracy
+                latitude:
+                    location.coordinate.latitude,
+                longitude:
+                    location.coordinate.longitude,
+                accuracy:
+                    location.horizontalAccuracy
             )
-            
+
             if self.manualRefreshInProgress {
 
-                self.manualRefreshInProgress = false
+                self.manualRefreshInProgress =
+                    false
 
-                // Restore normal operating behavior
-                self.locationManager.distanceFilter = 10
+                self.locationManager.distanceFilter =
+                    10
 
-                print("🛑 Manual location refresh complete")
+                print(
+                    "🛑 Manual location refresh complete"
+                )
             }
-
         }
     }
     

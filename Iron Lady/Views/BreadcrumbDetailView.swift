@@ -251,52 +251,8 @@ private struct BreadcrumbDetailContentView: View {
                             }
                             .buttonStyle(.plain)
                             .padding(.horizontal, 20)
-
-
-                            // MARK: - TEMPORARY ARRIVAL TEST BUTTON
-
-                            Button {
-
-                                Task {
-
-                                    await WantToGoArrivalManager.shared
-                                        .simulateArrival(
-                                            for: breadcrumb
-                                        )
-
-                                }
-
-                            } label: {
-
-                                Label(
-                                    "Simulate Arrival",
-                                    systemImage: "location.circle.fill"
-                                )
-                                .font(
-                                    .system(
-                                        size: 17,
-                                        weight: .semibold
-                                    )
-                                )
-                                .frame(
-                                    maxWidth: .infinity
-                                )
-                                .padding(.vertical, 12)
-                                .background(
-                                    Color.orange.opacity(0.15)
-                                )
-                                .foregroundStyle(.orange)
-                                .clipShape(
-                                    RoundedRectangle(
-                                        cornerRadius: 14,
-                                        style: .continuous
-                                    )
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.horizontal, 20)
-
                         }
+                        
                         LocationDateView(breadcrumb: breadcrumb)
                         NotesView(breadcrumb: breadcrumb)
 
