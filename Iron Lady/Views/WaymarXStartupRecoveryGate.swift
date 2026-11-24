@@ -194,6 +194,104 @@ struct WaymarXStartupRecoveryGate<Content: View>: View {
 
                 case .committing, .verifying:
 
+                #if DEBUG && targetEnvironment(simulator)
+
+                if record.phase == .committing &&
+                   ProcessInfo.processInfo.arguments.contains(
+                       "-WaymarXRecoverBeforeSaveTest"
+                   ) {
+
+                    print("🧪 Explicit simulator recovery requested")
+
+                    try WaymarXRestoreCoordinator.shared
+                        .recoverAbandonedSimulatorPreparation(
+                            container: PersistenceController.shared.container
+                        )
+
+                    print("✅ Simulator original database recovered")
+
+                    status = .ready
+                    onReady()
+                    return
+                }
+
+                    #endif
+
+                    #if DEBUG && targetEnvironment(simulator)
+
+                    if record.phase == .committing &&
+                       ProcessInfo.processInfo.arguments.contains(
+                           "-WaymarXFinalizeCommittedTest"
+                       ) {
+
+                        print("🧪 TEST B: Verifying committed replacement")
+
+                        let container = PersistenceController.shared.container
+                        let manager = WaymarXRestoreManager.shared
+                        let journal = WaymarXRestoreJournal.shared
+
+                        // Verify that the recovery safety backup is readable.
+                        _ = try manager.validateArchive(
+                            at: record.safetyBackupURL
+                        )
+
+                        // Compare the persisted database against the
+                        // entire staged backup, including all pin/group
+                        // properties and photograph contents.
+                        let verification = try await manager
+                            .verifyReplacementFromJournal(
+                                record: record,
+                                container: container
+                            )
+
+                        guard verification.matchesBackup,
+                              verification.pins == record.expectedPins,
+                              verification.groups == record.expectedGroups,
+                              verification.users == record.expectedUsers,
+                              verification.photosVerified ==
+                                  record.photoFilenameMap.count else {
+
+                            throw WaymarXRestoreError.invalidBackup(
+                                "Committed replacement failed full verification: " +
+                                verification.problems.joined(separator: "; ")
+                            )
+                        }
+
+                        print("✅ TEST B: Full database verification passed")
+                        print("Pins: \(verification.pins)")
+                        print("Groups: \(verification.groups)")
+                        print("Profiles: \(verification.users)")
+                        print("Photos verified: \(verification.photosVerified)")
+
+                        // The database is already committed and verified.
+                        // Advance the existing journal, not Core Data.
+                        guard let latest = try journal.load(),
+                              latest.operationID == record.operationID,
+                              latest.phase == .committing else {
+
+                            throw WaymarXRestoreError.invalidBackup(
+                                "Restore journal changed during recovery."
+                            )
+                        }
+
+                        try journal.updatePhase(.completed)
+
+                        // Reuse the completed-restore finalization path.
+                        try await WaymarXRestoreCoordinator.shared
+                            .finalizeCompletedSimulatorRestore(
+                                container: container
+                            )
+
+                        print("✅ TEST B: Recovery finalized")
+
+                        status = .ready
+                        onReady()
+                        return
+                    }
+
+                    #endif
+
+                    
                     // The database may already have changed.
                     // Inspect its actual records before making
                     // any recovery decision.

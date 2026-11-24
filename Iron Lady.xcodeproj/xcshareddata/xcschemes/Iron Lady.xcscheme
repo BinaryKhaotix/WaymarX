@@ -55,6 +55,14 @@
             argument = "-WaymarXTestRecoveryGate"
             isEnabled = "NO">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-WaymarXFinalizeCommittedTest"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-WaymarXRecoverBeforeSaveTest"
+            isEnabled = "NO">
+         </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable

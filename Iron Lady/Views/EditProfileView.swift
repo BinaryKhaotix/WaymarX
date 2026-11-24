@@ -718,6 +718,146 @@ struct EditProfileView: View {
                         Button {
                             guard let pending = pendingRestore,
                                   let safetyURL = safetyBackupURL else {
+
+                                stagingTestMessage =
+                                    "Select a backup and create a safety backup first."
+                                return
+                            }
+
+                            simulatorRestoreInProgress = true
+
+                            stagingTestMessage = """
+                            TEST B RUNNING
+
+                            Committing the replacement database.
+                            Do not interact with WaymarX.
+                            """
+
+                            Task { @MainActor in
+
+                                do {
+                                    let result = try await
+                                        WaymarXRestoreCoordinator.shared
+                                            .injectInterruptionAfterDatabaseSave(
+                                                sourceURL: pending.fileURL,
+                                                safetyBackupURL: safetyURL,
+                                                container:
+                                                    PersistenceController.shared.container
+                                            )
+
+                                    stagingTestMessage = """
+                                    TEST B: DATABASE SAVE RETURNED
+
+                                    Pins: \(result.pins)
+                                    Groups: \(result.groups)
+                                    Profiles: \(result.users)
+                                    Photos: \(result.photos)
+
+                                    Journal remains: committing
+
+                                    STOP WAYMARX IN XCODE NOW.
+
+                                    Restart normally, without recovery arguments.
+
+                                    Do not initiate another restoration.
+                                    """
+
+                                } catch {
+
+                                    stagingTestMessage = """
+                                    TEST B FAILED
+
+                                    \(error.localizedDescription)
+
+                                    The database state may be uncertain.
+
+                                    Do not initiate another restore.
+                                    Preserve the recovery journal.
+                                    """
+
+                                    print("❌ TEST B FAILED: \(error)")
+                                }
+
+                                // Leave restore controls disabled.
+                                // A cold restart and recovery inspection
+                                // are required regardless of the outcome.
+                            }
+
+                        } label: {
+                            Label(
+                                "Inject After Database Save",
+                                systemImage: "externaldrive.badge.exclamationmark"
+                            )
+                        }
+                        .disabled(
+                            simulatorRestoreInProgress ||
+                            pendingRestore == nil ||
+                            safetyBackupURL == nil
+                        )
+
+                        #endif
+
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            guard let pending = pendingRestore,
+                                  let safetyURL = safetyBackupURL else {
+                                stagingTestMessage =
+                                    "Select a backup and create a safety backup first."
+                                return
+                            }
+
+                            do {
+                                try WaymarXRestoreCoordinator.shared
+                                    .injectInterruptionBeforeDatabaseSave(
+                                        sourceURL: pending.fileURL,
+                                        safetyBackupURL: safetyURL,
+                                        container: PersistenceController.shared.container
+                                    )
+
+                                stagingTestMessage = """
+                                COMMIT-BOUNDARY TEST PREPARED
+
+                                Journal phase: committing
+
+                                Core Data replacement: NOT EXECUTED
+
+                                Stop WaymarX in Xcode.
+
+                                Restart normally to inspect recovery.
+                                """
+
+                            } catch {
+                                stagingTestMessage = """
+                                COMMIT-BOUNDARY TEST FAILED
+
+                                \(error.localizedDescription)
+
+                                Do not begin another restore until
+                                the recovery journal is inspected.
+                                """
+                            }
+
+                        } label: {
+                            Label(
+                                "Inject Before Database Save",
+                                systemImage: "bolt.horizontal.circle"
+                            )
+                        }
+                        .disabled(
+                            simulatorRestoreInProgress ||
+                            pendingRestore == nil ||
+                            safetyBackupURL == nil
+                        )
+
+                        #endif
+
+                        
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            guard let pending = pendingRestore,
+                                  let safetyURL = safetyBackupURL else {
                                 stagingTestMessage =
                                     "Select a backup and create a safety backup first."
                                 return

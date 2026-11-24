@@ -340,7 +340,8 @@ extension WaymarXRestoreCoordinator {
         }
 
         // Only a pre-commit operation may be cleaned up here.
-        guard record.phase == .readyToCommit else {
+        guard record.phase == .readyToCommit ||
+              record.phase == .committing else {
             throw WaymarXRestoreError.invalidBackup(
                 "Refusing cleanup after a possible database commit."
             )
@@ -593,13 +594,15 @@ extension WaymarXRestoreCoordinator {
 
         // Never clean up a transaction that may
         // have started committing Core Data.
-        guard record.phase == .readyToCommit else {
+        guard record.phase == .readyToCommit ||
+              record.phase == .committing else {
+
             throw WaymarXRestoreError.invalidBackup(
                 "Automatic preparation cleanup is not permitted " +
                 "for phase: \(record.phase.rawValue)"
             )
         }
-
+        
         guard !container.viewContext.hasChanges else {
             throw WaymarXRestoreError.invalidBackup(
                 "Unsaved database changes prevent recovery."
@@ -763,6 +766,204 @@ extension WaymarXRestoreCoordinator {
         print("✅ Staging directory cleaned")
         print("✅ Safety backup retained")
         print("✅ Recovery journal cleared")
+    }
+}
+
+#endif
+
+#if DEBUG && targetEnvironment(simulator)
+
+extension WaymarXRestoreCoordinator {
+
+    func injectInterruptionBeforeDatabaseSave(
+        sourceURL: URL,
+        safetyBackupURL: URL,
+        container: NSPersistentContainer
+    ) throws {
+
+        let manager = WaymarXRestoreManager.shared
+        let journal = WaymarXRestoreJournal.shared
+
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "A restore journal already exists."
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Save pending changes before testing."
+            )
+        }
+
+        // Prove the safety backup represents
+        // the original, current database.
+        _ = try manager
+            .verifySafetyBackupAgainstCurrentDatabase(
+                safetyBackupURL: safetyBackupURL,
+                context: container.viewContext
+            )
+
+        // Run actual preparation without
+        // modifying the Core Data database.
+        let transaction = try manager
+            .prepareRestoreTransaction(
+                from: sourceURL,
+                safetyBackupURL: safetyBackupURL
+            )
+
+        guard let record = try journal.load(),
+              record.phase == .readyToCommit,
+              record.expectedPins ==
+                  transaction.staged.backup.breadcrumbs.count,
+              record.expectedGroups ==
+                  transaction.staged.backup.groups.count else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Prepared restore journal is inconsistent."
+            )
+        }
+
+        // Simulate reaching the commit boundary.
+        // DO NOT perform the Core Data replacement.
+        try journal.updatePhase(.committing)
+
+        print("🧪 INTERRUPT BEFORE DATABASE SAVE")
+        print("Journal phase: committing")
+        print("Original database remains unchanged")
+        print("Stop WaymarX in Xcode now")
+    }
+}
+
+#endif
+
+#if DEBUG && targetEnvironment(simulator)
+
+extension WaymarXRestoreCoordinator {
+
+    func injectInterruptionAfterDatabaseSave(
+        sourceURL: URL,
+        safetyBackupURL: URL,
+        container: NSPersistentContainer
+    ) async throws -> WaymarXRestoreResult {
+
+        let manager = WaymarXRestoreManager.shared
+        let journal = WaymarXRestoreJournal.shared
+
+        // Do not run while recovery is already pending.
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "A previous restoration requires recovery."
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Save pending changes before testing."
+            )
+        }
+
+        // Check storage before creating the transaction.
+        try WaymarXStorageGuard.verifyAvailableSpace(
+            forArchive: sourceURL
+        )
+
+        // Validate the existing recovery copy.
+        _ = try manager
+            .verifySafetyBackupAgainstCurrentDatabase(
+                safetyBackupURL: safetyBackupURL,
+                context: container.viewContext
+            )
+
+        // Prepare the replacement and create the journal.
+        let transaction = try manager.prepareRestoreTransaction(
+            from: sourceURL,
+            safetyBackupURL: safetyBackupURL
+        )
+
+        guard let record = try journal.load(),
+              record.phase == .readyToCommit else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Restore preparation did not finish."
+            )
+        }
+
+        // Confirm that the persistent manifest matches
+        // the data we're actually about to commit.
+        let pinIDs = Set(
+            transaction.staged.backup.breadcrumbs.map(
+                \.backupID
+            )
+        )
+
+        let groupIDs = Set(
+            transaction.staged.backup.groups.map(
+                \.id
+            )
+        )
+
+        guard Set(record.expectedPinIDs) == pinIDs,
+              Set(record.expectedGroupIDs) == groupIDs,
+              record.photoFilenameMap ==
+                  transaction.preparedPhotos.filenameMap else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Prepared replacement manifest differs."
+            )
+        }
+
+        // Recheck the original database immediately
+        // before the destructive transaction.
+        _ = try manager
+            .verifySafetyBackupAgainstCurrentDatabase(
+                safetyBackupURL: safetyBackupURL,
+                context: container.viewContext
+            )
+
+        let currentUserCount = try container.viewContext.count(
+            for: NSFetchRequest<NSFetchRequestResult>(
+                entityName: "CrumbUser"
+            )
+        )
+
+        guard currentUserCount == record.expectedUsers else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Local profile count changed before commit."
+            )
+        }
+
+        // Write commit intention BEFORE replacing Core Data.
+        try journal.updatePhase(.committing)
+
+        print("🧪 TEST B: COMMITTING DATABASE")
+
+        // This is the REAL database replacement.
+        let result = try await
+            manager.commitStagedReplacementInSimulator(
+                staged: transaction.staged,
+                prepared: transaction.preparedPhotos,
+                container: container
+            )
+
+        // INTENTIONAL INTERRUPTION POINT:
+        //
+        // Core Data save has returned successfully.
+        // Do NOT advance journal to verifying/completed.
+        // Do NOT clear the journal.
+        //
+        // The next cold launch must inspect the
+        // already-replaced database.
+
+        print("🧪 TEST B: DATABASE SAVE RETURNED")
+        print("Pins: \(result.pins)")
+        print("Groups: \(result.groups)")
+        print("Profiles: \(result.users)")
+        print("Photos: \(result.photos)")
+        print("Journal deliberately remains committing")
+        print("STOP THE APP IN XCODE NOW")
+
+        return result
     }
 }
 
