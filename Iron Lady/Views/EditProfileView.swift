@@ -65,10 +65,12 @@ struct EditProfileView: View {
     @State private var pendingRestore: PendingWaymarXRestore?
     @State private var restoreFileForCleanup: URL?
     
-#if DEBUG && targetEnvironment(simulator)
-@State private var showSimulatorRestoreConfirmation = false
-@State private var simulatorRestoreInProgress = false
-#endif
+    @State private var showAutomaticRestoreConfirmation = false
+    
+    #if DEBUG && targetEnvironment(simulator)
+    @State private var showSimulatorRestoreConfirmation = false
+    @State private var simulatorRestoreInProgress = false
+    #endif
     
     @State private var safetyBackupURL: URL?
     @State private var safetyBackupMessage: String?
@@ -77,9 +79,9 @@ struct EditProfileView: View {
     @State private var recoveryCopyExported = false
     
     
-#if DEBUG
-@State private var stagingTestMessage: String?
-#endif
+    #if DEBUG
+    @State private var stagingTestMessage: String?
+    #endif
     @StateObject private var adMobConsentManager = AdMobConsentManager.shared
 
     private var user: CrumbUser? { users.first }
@@ -947,6 +949,109 @@ struct EditProfileView: View {
                         #endif
 
                         
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            print("🟢 AUTOMATIC RESTORE BUTTON TAPPED")
+
+                            showAutomaticRestoreConfirmation = true
+
+                            print(
+                                "Confirmation requested: \(showAutomaticRestoreConfirmation)"
+                            )
+
+                        } label: {
+                            Label(
+                                "Test Automatic Restore",
+                                systemImage: "arrow.clockwise.circle.fill"
+                            )
+                        }
+                        .disabled(simulatorRestoreInProgress)
+                        .alert(
+                            "Test Automatic Restore?",
+                            isPresented: $showAutomaticRestoreConfirmation
+                        ) {
+                            Button("Cancel", role: .cancel) {}
+
+                            Button("Replace Simulator Data", role: .destructive) {
+
+                                guard let pending = pendingRestore else {
+                                    stagingTestMessage = "No backup selected."
+                                    return
+                                }
+
+                                simulatorRestoreInProgress = true
+
+                                stagingTestMessage = """
+                                AUTOMATIC RESTORE STARTED
+
+                                Validating backup and creating
+                                a safety copy automatically.
+                                """
+
+                                Task { @MainActor in
+                                    do {
+                                        let result = try await
+                                            WaymarXRestoreCoordinator.shared
+                                                .executeAutomaticSafetyRestore(
+                                                    sourceURL: pending.fileURL,
+                                                    container:
+                                                        PersistenceController.shared.container
+                                                )
+
+                                        stagingTestMessage = """
+                                        AUTOMATIC RESTORE COMPLETED
+
+                                        Pins: \(result.restoration.pins)
+                                        Groups: \(result.restoration.groups)
+                                        Profiles: \(result.restoration.users)
+                                        Photos: \(result.restoration.photos)
+
+                                        Stop the app in Xcode, then restart
+                                        to complete recovery verification.
+                                        """
+
+                                        print("✅ AUTOMATIC RESTORE COMMITTED")
+
+                                    } catch {
+                                        stagingTestMessage = """
+                                        AUTOMATIC RESTORE FAILED
+
+                                        \(error.localizedDescription)
+
+                                        Do not start another restore
+                                        until recovery is inspected.
+                                        """
+
+                                        print("❌ AUTOMATIC RESTORE FAILED: \(error)")
+                                    }
+
+                                    // Deliberately keep restore controls disabled
+                                    // until the application restarts.
+                                }
+                            }
+                        } message: {
+                            Text(
+                                """
+                                WaymarX will automatically create and verify
+                                a safety backup, then replace the simulator's
+                                pins and groups with the selected backup.
+
+                                The local profile will be preserved.
+                                """
+                            )
+                        }
+                            #if DEBUG && targetEnvironment(simulator)
+                            Text(
+                                "Restore in progress: \(simulatorRestoreInProgress.description) | " +
+                                "Backup selected: \((pendingRestore != nil).description)"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            #endif
+
+                        #endif
+
                         
                         #if DEBUG && targetEnvironment(simulator)
 

@@ -183,6 +183,84 @@ final class WaymarXRestoreCoordinator {
 
         #endif
     }
+    
+    // MARK: - Automatic Restore Workflow
+
+    // This is the bridge between our tested restore engine
+    // and the future single-button production interface.
+    //
+    // For now, destructive execution remains simulator-only.
+
+    func executeAutomaticSafetyRestore(
+        sourceURL: URL,
+        container: NSPersistentContainer
+    ) async throws -> WaymarXRestoreExecutionResult {
+
+        #if targetEnvironment(simulator)
+
+        let journal = WaymarXRestoreJournal.shared
+
+        // Never start a second restore while recovery
+        // is required for an existing transaction.
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "An earlier restoration requires recovery."
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Save pending changes before restoring."
+            )
+        }
+
+        print("🔄 AUTOMATIC WAYMARX RESTORE STARTED")
+
+        // STEP 1:
+        // Validate the selected archive, check storage,
+        // and automatically create and verify a safety backup.
+        let safetyBackupURL = try prepareProductionRestore(
+            sourceURL: sourceURL,
+            container: container
+        )
+
+        print("✅ Automatic safety backup ready")
+
+        // STEP 2:
+        // Reuse our existing, tested replacement coordinator.
+        // The safety backup is supplied automatically.
+        let result = try await executeSimulatorReplacement(
+            sourceURL: sourceURL,
+            safetyBackupURL: safetyBackupURL,
+            container: container
+        )
+
+        // STEP 3:
+        // The tested transaction leaves its completed
+        // recovery journal intact.
+        // Restart recovery must finalize that journal
+        // before the normal interface is used again.
+
+        print("✅ AUTOMATIC RESTORE TRANSACTION COMPLETED")
+        print("Pins: \(result.restoration.pins)")
+        print("Groups: \(result.restoration.groups)")
+        print("Profiles: \(result.restoration.users)")
+        print("Photos: \(result.restoration.photos)")
+
+        return result
+
+        #else
+
+        // Production execution remains disabled until
+        // device recovery and UI lifecycle handling
+        // have been fully implemented and tested.
+        throw WaymarXRestoreError.invalidBackup(
+            "Production restoration is not enabled yet."
+        )
+
+        #endif
+    }
+
 }
 
 extension WaymarXRestoreCoordinator {
@@ -968,3 +1046,84 @@ extension WaymarXRestoreCoordinator {
 }
 
 #endif
+
+extension WaymarXRestoreCoordinator {
+
+    // MARK: - Production Restore Preflight
+
+    // Validates the incoming backup and automatically
+    // creates a verified recovery copy before ANY
+    // database replacement is permitted.
+
+    func prepareProductionRestore(
+        sourceURL: URL,
+        container: NSPersistentContainer
+    ) throws -> URL {
+
+        let manager = WaymarXRestoreManager.shared
+        let journal = WaymarXRestoreJournal.shared
+
+        print("🛡️ WAYMARX PRODUCTION RESTORE PREFLIGHT")
+
+        // Prevent a new restore when an earlier
+        // operation still requires recovery.
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "An earlier restoration requires recovery."
+            )
+        }
+
+        // Do not take a backup of a context containing
+        // unsaved user changes.
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Save pending changes before restoration."
+            )
+        }
+
+        // 1. Validate the selected incoming archive.
+        let incoming = try manager.validateArchive(
+            at: sourceURL
+        )
+
+        guard incoming.photosMissing == 0 else {
+            throw WaymarXRestoreError.invalidBackup(
+                "The selected backup contains missing photographs."
+            )
+        }
+
+        print("✅ Incoming backup validated")
+        print("Incoming pins: \(incoming.pinCount)")
+        print("Incoming groups: \(incoming.groupCount)")
+
+        // 2. Verify available storage.
+        try WaymarXStorageGuard.verifyAvailableSpace(
+            forArchive: sourceURL
+        )
+
+        print("✅ Storage preflight passed")
+
+        // 3. Automatically back up the CURRENT database.
+        let safety = try manager.createSafetyBackup(
+            context: container.viewContext
+        )
+
+        print("✅ Automatic safety backup created")
+
+        // 4. Verify that the safety archive represents
+        // the current database and photographs.
+        _ = try manager
+            .verifySafetyBackupAgainstCurrentDatabase(
+                safetyBackupURL: safety.fileURL,
+                context: container.viewContext
+            )
+
+        print("✅ Automatic safety backup verified")
+        print("✅ Production restore preflight complete")
+
+        // Return the verified safety backup's location.
+        // The subsequent restore transaction must use
+        // this exact recovery archive.
+        return safety.fileURL
+    }
+}
