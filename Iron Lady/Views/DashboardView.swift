@@ -149,8 +149,11 @@ public struct DashboardView: View {
                         .padding(.bottom, 18)
                     }
                     // MARK: - AdMob Banner
-                    if !isLandscape {
+                    if !isLandscape &&
+                       !AppDebugSettings.marketingScreenshotMode {
+
                         WaymarXBannerView()
+
                     }
                     
                     // Bottom bar "docks" cleanly. Add a slight background to avoid floating-on-content look.

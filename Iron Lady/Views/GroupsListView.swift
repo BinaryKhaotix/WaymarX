@@ -58,8 +58,12 @@ struct GroupsListView: View {
                 }
                 
                 // MARK: - AdMob Banner
-                if !isLandscape {
+                // MARK: - AdMob Banner
+                if !isLandscape &&
+                   !AppDebugSettings.marketingScreenshotMode {
+
                     WaymarXBannerView()
+
                 }
                 
                 BottomNavigationBar(

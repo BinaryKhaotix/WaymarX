@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 
 struct RecentBreadcrumbTileView: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
     let isFavorite: Bool
 
     private let tileSize: CGFloat = 100

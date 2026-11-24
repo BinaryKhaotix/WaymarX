@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -59,6 +59,7 @@
 		E37655D2303533DF0094AFCB /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = E37655D1303533DF0094AFCB /* GoogleMobileAds */; };
 		E37655D43035361E0094AFCB /* AdMobConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37655D33035361E0094AFCB /* AdMobConsentManager.swift */; };
 		E37655D6303537700094AFCB /* WaymarXBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37655D5303537700094AFCB /* WaymarXBannerView.swift */; };
+		E379776F30AF80B200765E66 /* AppDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E379776E30AF80B200765E66 /* AppDebugSettings.swift */; };
 		E38AC9E3304B5DB000EEBB98 /* DiagnosticsEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E2304B5DB000EEBB98 /* DiagnosticsEntry.swift */; };
 		E38AC9E5304B5DD500EEBB98 /* DiagnosticsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E4304B5DD500EEBB98 /* DiagnosticsStore.swift */; };
 		E38AC9E8304B5E9100EEBB98 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38AC9E7304B5E9100EEBB98 /* DiagnosticsView.swift */; };
@@ -86,6 +87,10 @@
 		E3EC26DE3040A26C00BAC128 /* AllBreadcrumbExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */; };
 		E3EC26E03040E9AC00BAC128 /* DocumentExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */; };
 		E3EC6C722D43230D00915919 /* AddressUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3EC6C712D43230D00915919 /* AddressUpdater.swift */; };
+		E3F856F430B4E2DE00075DB4 /* WaymarXRestoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856F330B4E2DD00075DB4 /* WaymarXRestoreManager.swift */; };
+		E3F856F630B5151C00075DB4 /* WaymarXRestoreJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856F530B5151C00075DB4 /* WaymarXRestoreJournal.swift */; };
+		E3F856FA30B518F000075DB4 /* WaymarXStartupRecoveryGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856F930B518F000075DB4 /* WaymarXStartupRecoveryGate.swift */; };
+		E3F856FC30B525F200075DB4 /* WaymarXRestoreCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856FB30B525F200075DB4 /* WaymarXRestoreCoordinator.swift */; };
 		E3FCBD64304A48A500171417 /* WantToGoArrivalBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */; };
 		E3FCBD67304A51BA00171417 /* ContextualTip.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD66304A51BA00171417 /* ContextualTip.swift */; };
 		E3FCBD69304A520B00171417 /* ContextualTipManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD68304A520B00171417 /* ContextualTipManager.swift */; };
@@ -150,6 +155,7 @@
 		E368F1CB2D0D2C540014E9F1 /* relativeTimeString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = relativeTimeString.swift; sourceTree = "<group>"; };
 		E37655D33035361E0094AFCB /* AdMobConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConsentManager.swift; sourceTree = "<group>"; };
 		E37655D5303537700094AFCB /* WaymarXBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXBannerView.swift; sourceTree = "<group>"; };
+		E379776E30AF80B200765E66 /* AppDebugSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDebugSettings.swift; sourceTree = "<group>"; };
 		E38AC9E2304B5DB000EEBB98 /* DiagnosticsEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsEntry.swift; sourceTree = "<group>"; };
 		E38AC9E4304B5DD500EEBB98 /* DiagnosticsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsStore.swift; sourceTree = "<group>"; };
 		E38AC9E7304B5E9100EEBB98 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
@@ -178,6 +184,10 @@
 		E3EC26DD3040A26C00BAC128 /* AllBreadcrumbExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllBreadcrumbExport.swift; sourceTree = "<group>"; };
 		E3EC26DF3040E9AC00BAC128 /* DocumentExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExporter.swift; sourceTree = "<group>"; };
 		E3EC6C712D43230D00915919 /* AddressUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressUpdater.swift; sourceTree = "<group>"; };
+		E3F856F330B4E2DD00075DB4 /* WaymarXRestoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXRestoreManager.swift; sourceTree = "<group>"; };
+		E3F856F530B5151C00075DB4 /* WaymarXRestoreJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXRestoreJournal.swift; sourceTree = "<group>"; };
+		E3F856F930B518F000075DB4 /* WaymarXStartupRecoveryGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXStartupRecoveryGate.swift; sourceTree = "<group>"; };
+		E3F856FB30B525F200075DB4 /* WaymarXRestoreCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXRestoreCoordinator.swift; sourceTree = "<group>"; };
 		E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoArrivalBanner.swift; sourceTree = "<group>"; };
 		E3FCBD66304A51BA00171417 /* ContextualTip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTip.swift; sourceTree = "<group>"; };
 		E3FCBD68304A520B00171417 /* ContextualTipManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTipManager.swift; sourceTree = "<group>"; };
@@ -185,6 +195,10 @@
 		E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnnamedPinsView.swift; sourceTree = "<group>"; };
 		E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentBreadcrumbsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E379775430AF6A2D00765E66 /* MARKETING */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = MARKETING; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		E317481B2D079C0C00265372 /* Frameworks */ = {
@@ -274,48 +288,49 @@
 		E31748432D07AA2B00265372 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				E38AC9E6304B5E6300EEBB98 /* DIAGNOSTIC VIEWS */,
-				E3FCBD6A304A522800171417 /* Context Tip Views */,
-				E301249D3042018F0046364E /* WantToGo */,
-				E3AFDE642F23154300F69826 /* ImageLoader.swift */,
-				E31748232D079C0C00265372 /* ContentView.swift */,
 				E31748392D079EDA00265372 /* AddBreadcrumbView.swift */,
+				E366B59D2D124E7F0038597C /* AddUserView.swift */,
+				E366B5972D12269F0038597C /* AllBreadcrumbsView.swift */,
+				E350B49A303906A700435068 /* BackupRestoreView.swift */,
+				E3E61D002D14EB53006FA68D /* BottomNavigationBar.swift */,
 				E317483D2D07A28300265372 /* BreadcrumbDetailView.swift */,
 				E31748412D07A74C00265372 /* BreadcrumbMapView.swift */,
-				E31748452D07AA8F00265372 /* BreadcrumbTileView.swift */,
-				E31748492D07B92900265372 /* ZoomableImage.swift */,
-				E317484B2D07BA1200265372 /* EditBreadcrumbView.swift */,
-				E317484D2D07BD8E00265372 /* DashboardView.swift */,
-				E317484F2D07DC2700265372 /* CameraView.swift */,
-				E3C8E54C2D0B5926005B9F0B /* TileContainerView.swift */,
-				E3C8E54E2D0B5942005B9F0B /* GroupTileView.swift */,
-				E3C8E5502D0B5963005B9F0B /* GroupCrumbsView.swift */,
-				E3C8E5522D0B5982005B9F0B /* UnnamedCrumbsView.swift */,
-				E3C8E5542D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift */,
-				E368F1C72D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift */,
-				E368F1C92D0D22630014E9F1 /* SingleRowTileContainerView.swift */,
-				E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */,
-				E366B5972D12269F0038597C /* AllBreadcrumbsView.swift */,
-				E366B5992D1239AF0038597C /* BreadcrumbRowView.swift */,
-				E366B59B2D124E070038597C /* LoginView.swift */,
-				E366B59D2D124E7F0038597C /* AddUserView.swift */,
-				E366B5A32D124EE10038597C /* SettingsView.swift */,
-				E3E61D002D14EB53006FA68D /* BottomNavigationBar.swift */,
-				E30EBFCE2D163AF00052A791 /* EditProfileView.swift */,
-				E3D7F7032D1F487800AEBDB9 /* StartupView.swift */,
-				E3D7F7072D1F90DF00AEBDB9 /* GroupsListView.swift */,
-				E3AC33032D36F64800ADAFFE /* GroupCrumbMapView.swift */,
 				E3AE91702D38722800CA6129 /* BreadcrumbNavigationView.swift */,
-				E3AE91722D38929F00CA6129 /* TileContainerVerticalView.swift */,
-				E3252E2F2D4472E9007E15D5 /* FavoritesBreadcrumbView.swift */,
+				E366B5992D1239AF0038597C /* BreadcrumbRowView.swift */,
+				E31748452D07AA8F00265372 /* BreadcrumbTileView.swift */,
+				E317484F2D07DC2700265372 /* CameraView.swift */,
+				E31748232D079C0C00265372 /* ContentView.swift */,
+				E3FCBD6A304A522800171417 /* Context Tip Views */,
+				E317484D2D07BD8E00265372 /* DashboardView.swift */,
+				E38AC9E6304B5E6300EEBB98 /* DIAGNOSTIC VIEWS */,
+				E317484B2D07BA1200265372 /* EditBreadcrumbView.swift */,
+				E30EBFCE2D163AF00052A791 /* EditProfileView.swift */,
 				E3252E312D447313007E15D5 /* FavoriteCrumbTile.swift */,
+				E3252E2F2D4472E9007E15D5 /* FavoritesBreadcrumbView.swift */,
+				E345EECA2D0EB1E40012641A /* FullScreenImageView.swift */,
+				E3AC33032D36F64800ADAFFE /* GroupCrumbMapView.swift */,
+				E3C8E5502D0B5963005B9F0B /* GroupCrumbsView.swift */,
 				E38DDDDA2D481AB8001B7311 /* GroupEditorView.swift */,
-				E3516EB32D94B7B5007FF7ED /* SplashScreenView.swift */,
-				E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */,
-				E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */,
 				E3AFDE622F22D17B00F69826 /* GroupMaintenanceView.swift */,
+				E3D7F7072D1F90DF00AEBDB9 /* GroupsListView.swift */,
+				E3C8E54E2D0B5942005B9F0B /* GroupTileView.swift */,
+				E3AFDE642F23154300F69826 /* ImageLoader.swift */,
+				E366B59B2D124E070038597C /* LoginView.swift */,
+				E3FD7C792F1B077500CE7EA6 /* RecentBreadcrumbsView.swift */,
+				E368F1C72D0D223A0014E9F1 /* RecentBreadcrumbTileView.swift */,
+				E366B5A32D124EE10038597C /* SettingsView.swift */,
+				E368F1C92D0D22630014E9F1 /* SingleRowTileContainerView.swift */,
+				E3516EB32D94B7B5007FF7ED /* SplashScreenView.swift */,
+				E3D7F7032D1F487800AEBDB9 /* StartupView.swift */,
+				E3AE91722D38929F00CA6129 /* TileContainerVerticalView.swift */,
+				E3C8E54C2D0B5926005B9F0B /* TileContainerView.swift */,
+				E3C8E5542D0B7B94005B9F0B /* UnnamedBreadcrumbsListView.swift */,
+				E3C8E5522D0B5982005B9F0B /* UnnamedCrumbsView.swift */,
+				E3FD7C762F1AC67900CE7EA6 /* UnnamedPinsView.swift */,
+				E301249D3042018F0046364E /* WantToGo */,
 				E37655D5303537700094AFCB /* WaymarXBannerView.swift */,
-				E350B49A303906A700435068 /* BackupRestoreView.swift */,
+				E31748492D07B92900265372 /* ZoomableImage.swift */,
+				E3F856F930B518F000075DB4 /* WaymarXStartupRecoveryGate.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -323,6 +338,7 @@
 		E31748442D07AA5A00265372 /* Swift Code */ = {
 			isa = PBXGroup;
 			children = (
+				E379775430AF6A2D00765E66 /* MARKETING */,
 				E38AC9E1304B5D4800EEBB98 /* DIAGNOSTICS */,
 				E3FCBD65304A51A900171417 /* Context Tips */,
 				E30124A43042476B0046364E /* WantToGo */,
@@ -341,6 +357,9 @@
 				E350B4A03039211A00435068 /* BackupShareSheet.swift */,
 				E3195F53303FA51A0062482E /* WaymarXBackupType.swift */,
 				E3195F55303FACCF0062482E /* BackupDocumentExporter.swift */,
+				E3F856F330B4E2DD00075DB4 /* WaymarXRestoreManager.swift */,
+				E3F856F530B5151C00075DB4 /* WaymarXRestoreJournal.swift */,
+				E3F856FB30B525F200075DB4 /* WaymarXRestoreCoordinator.swift */,
 			);
 			path = "Swift Code";
 			sourceTree = "<group>";
@@ -366,6 +385,7 @@
 				E38AC9E2304B5DB000EEBB98 /* DiagnosticsEntry.swift */,
 				E38AC9E4304B5DD500EEBB98 /* DiagnosticsStore.swift */,
 				E38AC9E9304B7FA200EEBB98 /* DiagnosticsStatus.swift */,
+				E379776E30AF80B200765E66 /* AppDebugSettings.swift */,
 			);
 			path = DIAGNOSTICS;
 			sourceTree = "<group>";
@@ -409,6 +429,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E379775430AF6A2D00765E66 /* MARKETING */,
 			);
 			name = "Iron Lady";
 			productName = "Iron Lady";
@@ -499,6 +522,7 @@
 				E3AFDE652F23154500F69826 /* ImageLoader.swift in Sources */,
 				E317482B2D079C0F00265372 /* Persistence.swift in Sources */,
 				E31748242D079C0C00265372 /* ContentView.swift in Sources */,
+				E3F856F430B4E2DE00075DB4 /* WaymarXRestoreManager.swift in Sources */,
 				E3FCBD6C304A524E00171417 /* ContextualTipBannerView.swift in Sources */,
 				E31748222D079C0C00265372 /* Iron_LadyApp.swift in Sources */,
 				E3AC33042D36F64800ADAFFE /* GroupCrumbMapView.swift in Sources */,
@@ -511,6 +535,7 @@
 				E366B5B02D125BA10038597C /* CrumbUser+CoreDataProperties.swift in Sources */,
 				E3D7F7082D1F90DF00AEBDB9 /* GroupsListView.swift in Sources */,
 				E366B5A42D124EE10038597C /* SettingsView.swift in Sources */,
+				E3F856F630B5151C00075DB4 /* WaymarXRestoreJournal.swift in Sources */,
 				E3D7F7062D1F48A100AEBDB9 /* NavigationModel.swift in Sources */,
 				E31748422D07A74C00265372 /* BreadcrumbMapView.swift in Sources */,
 				E3252E322D447313007E15D5 /* FavoriteCrumbTile.swift in Sources */,
@@ -525,6 +550,7 @@
 				E366B59E2D124E7F0038597C /* AddUserView.swift in Sources */,
 				E3C8E5532D0B5982005B9F0B /* UnnamedCrumbsView.swift in Sources */,
 				E3252E302D4472E9007E15D5 /* FavoritesBreadcrumbView.swift in Sources */,
+				E3F856FA30B518F000075DB4 /* WaymarXStartupRecoveryGate.swift in Sources */,
 				E3E61D012D14EB53006FA68D /* BottomNavigationBar.swift in Sources */,
 				E366BA672D8B7AE6004D5FA4 /* ShareSheetHelper.swift in Sources */,
 				E3C8E54D2D0B5926005B9F0B /* TileContainerView.swift in Sources */,
@@ -535,10 +561,12 @@
 				E38DDDD72D470D5F001B7311 /* CrmGroup+CoreDataProperties.swift in Sources */,
 				E31748502D07DC2700265372 /* CameraView.swift in Sources */,
 				E317484A2D07B92900265372 /* ZoomableImage.swift in Sources */,
+				E379776F30AF80B200765E66 /* AppDebugSettings.swift in Sources */,
 				E3516EB42D94B7B5007FF7ED /* SplashScreenView.swift in Sources */,
 				E366BA5D2D8B733F004D5FA4 /* BreadcrumbExport.swift in Sources */,
 				E3EC26E03040E9AC00BAC128 /* DocumentExporter.swift in Sources */,
 				E3343C882F19C7440011C089 /* BreadcrumbStore.swift in Sources */,
+				E3F856FC30B525F200075DB4 /* WaymarXRestoreCoordinator.swift in Sources */,
 				E350B4A13039211A00435068 /* BackupShareSheet.swift in Sources */,
 				E3FD7C7A2F1B077500CE7EA6 /* RecentBreadcrumbsView.swift in Sources */,
 				E3EC6C722D43230D00915919 /* AddressUpdater.swift in Sources */,
@@ -700,16 +728,16 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
-				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "FreedomAutomation.Iron-Lady";
+				PRODUCT_BUNDLE_IDENTIFIER = com.freedomautomation.Waymarx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -742,16 +770,16 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
-				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "FreedomAutomation.Iron-Lady";
+				PRODUCT_BUNDLE_IDENTIFIER = com.freedomautomation.Waymarx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

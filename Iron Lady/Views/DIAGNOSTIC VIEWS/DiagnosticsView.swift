@@ -11,7 +11,7 @@ import UIKit
 struct DiagnosticsView: View {
     @EnvironmentObject var diagnosticsStore: DiagnosticsStore
     @EnvironmentObject var locationManager: LocationManager
-
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
 
@@ -23,7 +23,31 @@ struct DiagnosticsView: View {
                 alignment: .leading,
                 spacing: 18
             ) {
+                
+                #if DEBUG
 
+                Section("Marketing Demo Data") {
+
+                    Button("Load Marketing Data") {
+
+                        MarketingDemoData.load(
+                            context: viewContext
+                        )
+                    }
+
+                    Button(
+                        "Delete Marketing Data",
+                        role: .destructive
+                    ) {
+
+                        MarketingDemoData.delete(
+                            context: viewContext
+                        )
+                    }
+                }
+
+                #endif
+                
                 systemStatusSection
 
                 wantToGoSection

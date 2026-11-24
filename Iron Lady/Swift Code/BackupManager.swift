@@ -186,7 +186,7 @@ final class BackupManager {
                     ]
 
                 return WaymarXBreadcrumbBackup(
-                    backupID: UUID(),
+                    backupID: breadcrumb.id ?? UUID(),
 
                     dateDropped: breadcrumb.dateDropped,
 

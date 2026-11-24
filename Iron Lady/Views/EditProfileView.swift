@@ -8,6 +8,12 @@ import SwiftUI
 import CoreLocation
 import CoreData
 
+private struct PendingWaymarXRestore: Identifiable {
+    let id = UUID()
+    let fileURL: URL
+    let preview: WaymarXRestorePreview
+}
+
 struct EditProfileView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject var locationManager: LocationManager
@@ -55,6 +61,16 @@ struct EditProfileView: View {
     @State private var showBackupShareSheet = false
     @State private var showRestoreFilePicker = false
     @State private var showBackupExporter = false
+    
+    @State private var pendingRestore: PendingWaymarXRestore?
+    @State private var restoreFileForCleanup: URL?
+    
+    @State private var safetyBackupURL: URL?
+    @State private var safetyBackupMessage: String?
+    
+    @State private var showSafetyBackupExporter = false
+    @State private var recoveryCopyExported = false
+    
     
     @StateObject private var adMobConsentManager = AdMobConsentManager.shared
 
@@ -269,6 +285,8 @@ struct EditProfileView: View {
 //                )
 //            }
 //        }
+
+
         .fileImporter(
             isPresented: $showRestoreFilePicker,
             allowedContentTypes: [.waymarXBackup],
@@ -280,18 +298,70 @@ struct EditProfileView: View {
             case .success(let urls):
 
                 guard let selectedURL = urls.first else {
-                    backupAlertMessage =
-                        "No backup file was selected."
+                    backupAlertMessage = "No backup file was selected."
                     return
                 }
 
-                print(
-                    "Selected WaymarX Backup:",
-                    selectedURL.path
-                )
+                DispatchQueue.global(qos: .userInitiated).async {
 
-                backupAlertMessage =
-                    "Backup file selected successfully."
+                    let fileManager = FileManager.default
+
+                    let accessed = selectedURL
+                        .startAccessingSecurityScopedResource()
+
+                    defer {
+                        if accessed {
+                            selectedURL.stopAccessingSecurityScopedResource()
+                        }
+                    }
+
+                    let temporaryURL = fileManager.temporaryDirectory
+                        .appendingPathComponent(
+                            "WaymarX_Import_\(UUID().uuidString).waymarxbackup"
+                        )
+
+                    do {
+                        try fileManager.copyItem(
+                            at: selectedURL,
+                            to: temporaryURL
+                        )
+
+                        let preview = try WaymarXRestoreManager.shared
+                            .validateArchive(at: temporaryURL)
+
+                        // Preserve the file for the confirmation screen.
+                        DispatchQueue.main.async {
+
+                            // Reset safety-backup state for the newly selected archive
+                            safetyBackupURL = nil
+                            safetyBackupMessage = nil
+                            recoveryCopyExported = false
+
+                            // Retain the selected backup for confirmation
+                            restoreFileForCleanup = temporaryURL
+
+                            pendingRestore = PendingWaymarXRestore(
+                                fileURL: temporaryURL,
+                                preview: preview
+                            )
+                        }
+                        
+                    } catch {
+                        try? fileManager.removeItem(at: temporaryURL)
+
+                        let message = error.localizedDescription
+
+                        DispatchQueue.main.async {
+                            backupAlertMessage = """
+                            Backup Validation Failed
+
+                            \(message)
+
+                            No existing WaymarX data was changed.
+                            """
+                        }
+                    }
+                }
 
             case .failure(let error):
 
@@ -300,6 +370,193 @@ struct EditProfileView: View {
 
                 \(error.localizedDescription)
                 """
+            }
+        }
+        .sheet(item: $pendingRestore, onDismiss: {
+
+            // Remove the staged file after the sheet closes.
+            if let stagedURL = restoreFileForCleanup {
+                try? FileManager.default.removeItem(at: stagedURL)
+                restoreFileForCleanup = nil
+            }
+
+        }) { pending in
+
+            NavigationStack {
+                Form {
+
+                    Section("Backup Information") {
+                        LabeledContent(
+                            "Created",
+                            value: pending.preview.createdAt.formatted()
+                        )
+
+                        LabeledContent(
+                            "App Version",
+                            value: pending.preview.appVersion
+                        )
+                    }
+
+                    Section("Contents") {
+                        LabeledContent(
+                            "Saved Pins",
+                            value: "\(pending.preview.pinCount)"
+                        )
+
+                        LabeledContent(
+                            "Saved Groups",
+                            value: "\(pending.preview.groupCount)"
+                        )
+
+                        LabeledContent(
+                            "User Profiles",
+                            value: "\(pending.preview.userCount)"
+                        )
+
+                        LabeledContent(
+                            "Photographs",
+                            value: "\(pending.preview.photosFound)"
+                        )
+
+                        LabeledContent(
+                            "Missing Photos",
+                            value: "\(pending.preview.photosMissing)"
+                        )
+                    }
+
+                    Section {
+                        Label(
+                            "Your existing WaymarX data has not been changed.",
+                            systemImage: "checkmark.shield"
+                        )
+                        .foregroundStyle(.green)
+
+                        Text(
+                            "Restoring this backup will eventually replace " +
+                            "the current WaymarX database. A safety backup " +
+                            "must be created first."
+                        )
+                        .font(.footnote)
+                    }
+
+                    Section("Data Protection") {
+
+                        Button {
+                            do {
+                                safetyBackupMessage = "Creating safety backup..."
+
+                                let result = try WaymarXRestoreManager.shared
+                                    .createSafetyBackup(context: viewContext)
+
+                                safetyBackupURL = result.fileURL
+
+                                safetyBackupMessage = """
+                                Safety Backup Verified
+
+                                Pins: \(result.preview.pinCount)
+                                Groups: \(result.preview.groupCount)
+                                Photos: \(result.preview.photosFound)
+
+                                A recovery copy has been saved inside WaymarX.
+                                """
+
+                            } catch {
+                                safetyBackupURL = nil
+
+                                safetyBackupMessage = """
+                                Safety Backup Failed
+
+                                \(error.localizedDescription)
+
+                                Existing data has not been replaced.
+                                """
+                            }
+                        } label: {
+                            Label(
+                                "Create Safety Backup",
+                                systemImage: "externaldrive.badge.icloud"
+                            )
+                        }
+                        .disabled(safetyBackupURL != nil)
+                        
+                        if recoveryCopyExported {
+                            Label(
+                                "Recovery copy exported",
+                                systemImage: "checkmark.shield.fill"
+                            )
+                            .foregroundStyle(.green)
+                        }
+
+                        if let safetyBackupMessage {
+                            Text(safetyBackupMessage)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if safetyBackupURL != nil {
+                            Label(
+                                "Safety backup created and validated",
+                                systemImage: "checkmark.shield.fill"
+                            )
+                            .foregroundStyle(.green)
+                        }
+                        
+                        if safetyBackupURL != nil {
+
+                            Button {
+                                recoveryCopyExported = false
+                                showSafetyBackupExporter = true
+                            } label: {
+                                Label(
+                                    "Save Recovery Copy",
+                                    systemImage: "square.and.arrow.up"
+                                )
+                            }
+
+                        }
+
+                        Button("Restore Backup") {
+                            // Database replacement will be implemented next.
+                        }
+                        .disabled(true)
+
+                        Text(
+                            "Restoration remains disabled until external recovery " +
+                            "and safe database replacement are implemented."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+
+                }
+                .navigationTitle("Confirm Restore")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            restoreFileForCleanup = pending.fileURL
+                            pendingRestore = nil
+                        }
+                    }
+                }
+
+                .sheet(isPresented: $showSafetyBackupExporter) {
+                    if let safetyBackupURL {
+                        BackupDocumentExporter(
+                            fileURL: safetyBackupURL,
+                            onCompletion: { success in
+
+                                recoveryCopyExported = success
+
+                                if success {
+                                    print("✅ Recovery copy export completed")
+                                } else {
+                                    print("🟡 Recovery copy export cancelled")
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
         .sheet(isPresented: $showBackupExporter) {

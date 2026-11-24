@@ -8,8 +8,13 @@ import SwiftUI
 import MapKit
 import CoreData
 
-// BreadcrumbDetailView.swift
 
+private struct ExportShareItem: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+// BreadcrumbDetailView.swift
 struct BreadcrumbDetailView: View {
 
     // MARK: - Mode
@@ -24,8 +29,7 @@ struct BreadcrumbDetailView: View {
     @EnvironmentObject var navigationModel: NavigationModel
 
     @State private var currentIndex: Int = 0
-    @State private var exportURL: URL?
-    @State private var showingShareSheet = false
+    @State private var exportShareItem: ExportShareItem?
     @State private var showFullScreenImage = false
     @State private var selectedTab: Tab = .home
 
@@ -84,8 +88,7 @@ struct BreadcrumbDetailView: View {
             if let breadcrumb = crumb {
                 BreadcrumbDetailContentView(
                     breadcrumb: breadcrumb,
-                    exportURL: $exportURL,
-                    showingShareSheet: $showingShareSheet,
+                    exportShareItem: $exportShareItem,
                     showFullScreenImage: $showFullScreenImage,
                     selectedTab: $selectedTab,
                     onHome: { navigationModel.path = [.dashboard] },
@@ -165,16 +168,20 @@ struct BreadcrumbDetailView: View {
     // MARK: - Actions (operate on a specific crumb)
 
     private func exportBreadcrumb(_ breadcrumb: Breadcrumb) {
+
         ExportManager.exportSingleCrumb(breadcrumb) { url in
-            if let url = url {
-                exportURL = url
-                showingShareSheet = true
-            } else {
+
+            guard let url else {
                 print("Export failed.")
+                return
+            }
+
+            DispatchQueue.main.async {
+                exportShareItem = ExportShareItem(url: url)
             }
         }
     }
-
+    
     private func toggleFavoriteStatus(_ breadcrumb: Breadcrumb) {
         breadcrumb.isFavorite.toggle()
         do {
@@ -190,8 +197,7 @@ struct BreadcrumbDetailView: View {
 private struct BreadcrumbDetailContentView: View {
     @ObservedObject var breadcrumb: Breadcrumb
 
-    @Binding var exportURL: URL?
-    @Binding var showingShareSheet: Bool
+    @Binding var exportShareItem: ExportShareItem?
     @Binding var showFullScreenImage: Bool
     @Binding var selectedTab: Tab
 
@@ -258,14 +264,19 @@ private struct BreadcrumbDetailContentView: View {
 
                         // ✅ iOS 18 map + iOS 17 fallback
                         if #available(iOS 18, *) {
-                            CrumbMapView_iOS18(nonIdCrumb: NonIdentifiableBreadcrumb(breadcrumb: breadcrumb))
+                            CrumbMapView_iOS18(
+                                nonIdCrumb: NonIdentifiableBreadcrumb(breadcrumb: breadcrumb),
+                                onMap: onMap
+                            )
                         } else {
                             CrumbMapView_Legacy(
-                                coordinate: CLLocationCoordinate2D(latitude: breadcrumb.latitude,
-                                                                   longitude: breadcrumb.longitude)
+                                coordinate: CLLocationCoordinate2D(
+                                    latitude: breadcrumb.latitude,
+                                    longitude: breadcrumb.longitude
+                                ),
+                                onMap: onMap
                             )
                         }
-
                         Spacer().frame(height: 80)
                     }
                     .padding(.horizontal)
@@ -335,10 +346,10 @@ private struct BreadcrumbDetailContentView: View {
                 FullScreenImageView(image: image)
             }
         }
-        .sheet(isPresented: $showingShareSheet) {
-            if let url = exportURL {
-                ShareSheet(activityItems: [url])
-            }
+        .sheet(item: $exportShareItem) { item in
+            ShareSheet(
+                activityItems: [item.url]
+            )
         }
     }
 
@@ -354,7 +365,8 @@ private struct BreadcrumbDetailContentView: View {
 }
 
 private struct BreadcrumbHeaderView: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
+    //let breadcrumb: Breadcrumb
 
     var body: some View {
         VStack {
@@ -375,7 +387,7 @@ private struct BreadcrumbHeaderView: View {
 }
 
 private struct BreadcrumbImageView: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
     @Binding var showFullScreenImage: Bool
 
     var body: some View {
@@ -423,7 +435,7 @@ private struct BreadcrumbImageView: View {
 }
 
 private struct LocationDateView: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
 
     var body: some View {
         HStack(alignment: .top) {
@@ -486,7 +498,7 @@ private struct LocationDateView: View {
 }
 
 private struct NotesView: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
 
     var body: some View {
         VStack(alignment: .center, spacing: 5) {
@@ -521,6 +533,7 @@ private struct DummyAnnotation: Identifiable {
 @available(iOS 18, *)
 private struct CrumbMapView_iOS18: View {
     let nonIdCrumb: NonIdentifiableBreadcrumb
+    let onMap: () -> Void
 
     private var region: Binding<MKCoordinateRegion> {
         .constant(
@@ -544,6 +557,9 @@ private struct CrumbMapView_iOS18: View {
         .frame(height: 200)
         .frame(maxWidth: .infinity)
         .cornerRadius(15)
+        .onTapGesture {
+            onMap()
+        }
         .shadow(color: Color.black.opacity(0.18), radius: 8, x: 0, y: 4)
         .padding(.horizontal, 20)
     }
@@ -553,7 +569,8 @@ private struct CrumbMapView_iOS18: View {
 
 private struct CrumbMapView_Legacy: View {
     let coordinate: CLLocationCoordinate2D
-
+    let onMap: () -> Void
+    
     private var region: Binding<MKCoordinateRegion> {
         .constant(
             MKCoordinateRegion(
@@ -570,6 +587,9 @@ private struct CrumbMapView_Legacy: View {
         .frame(height: 200)
         .frame(maxWidth: .infinity)
         .cornerRadius(15)
+        .onTapGesture {
+            onMap()
+        }
         .shadow(color: Color.black.opacity(0.18), radius: 8, x: 0, y: 4)
         .padding(.horizontal, 20)
     }

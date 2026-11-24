@@ -127,9 +127,12 @@ struct GroupCrumbsView: View {
                 }
                 .padding()
             }
-            // MARK: - AdMob Banner
-            WaymarXBannerView()
 
+            // MARK: - AdMob Banner
+            if !AppDebugSettings.marketingScreenshotMode {
+                WaymarXBannerView()
+            }
+            
             groupBottomNavigationBar
         }
         .navigationTitle(groupName)

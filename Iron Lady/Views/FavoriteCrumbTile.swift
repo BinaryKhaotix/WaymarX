@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct FavoriteCrumbTile: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
 
     /// Favorites view will use the default (true).
     /// Recent view should pass false and handle its own overlays.

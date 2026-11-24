@@ -16,7 +16,6 @@
 				<string>com.freedomautomation.waymarx.backup</string>
 			</array>
 		</dict>
-		<dict/>
 	</array>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-4122100408896713~8292330623</string>
@@ -223,6 +222,8 @@
 			<string>3qcr597p9d.skadnetwork</string>
 		</dict>
 	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

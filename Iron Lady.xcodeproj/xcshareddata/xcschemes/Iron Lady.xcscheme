@@ -50,6 +50,12 @@
             ReferencedContainer = "container:Iron Lady.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-WaymarXTestRecoveryGate"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "CORESVG_VERBOSE"

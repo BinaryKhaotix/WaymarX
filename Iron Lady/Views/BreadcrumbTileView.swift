@@ -9,7 +9,8 @@ import SwiftUI
 import CoreLocation
 
 struct BreadcrumbTileView: View {
-    let breadcrumb: Breadcrumb
+    @ObservedObject var breadcrumb: Breadcrumb
+    //let breadcrumb: Breadcrumb
 
     var body: some View {
         ZStack(alignment: .topTrailing) {

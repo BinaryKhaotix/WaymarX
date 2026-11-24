@@ -56,16 +56,34 @@ private struct BannerContainer: UIViewRepresentable {
 
         let bannerView = BannerView(adSize: adSize)
 
-        // Google's official TEST banner ID
-        bannerView.adUnitID =
-            "ca-app-pub-3940256099942544/2435281174"
-
+        // Google AdMob banner ID
+        #if DEBUG
+            // Google's official TEST banner ID
+            bannerView.adUnitID =
+                "ca-app-pub-3940256099942544/2435281174"
+        #else
+            // Crumbz production banner ID
+            bannerView.adUnitID =
+                "ca-app-pub-4122100408896713/6817110197"
+        #endif
+        
+        
         // Add delegate so we can see success/failure
         bannerView.delegate = context.coordinator
 
         print("🟡 AdMob: Requesting banner...")
 
-        bannerView.load(Request())
+        //bannerView.load(Request())
+        
+        // Request non-personalized advertisements.
+        let request = Request()
+
+        let extras = Extras()
+        extras.additionalParameters = ["npa": "1"]
+
+        request.register(extras)
+
+        bannerView.load(request)
 
         return bannerView
     }

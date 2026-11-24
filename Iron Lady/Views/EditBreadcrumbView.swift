@@ -164,7 +164,15 @@ struct EditBreadcrumbView: View {
         }
 
         do {
+            print("EDIT breadcrumb:", breadcrumb.objectID.uriRepresentation())
+            print("EDIT name:", breadcrumb.name ?? "nil")
+            print("Same context:", breadcrumb.managedObjectContext === viewContext)
+            print("Has changes:", viewContext.hasChanges)
             try viewContext.save()
+            
+            viewContext.processPendingChanges()
+            breadcrumb.objectWillChange.send()
+            
             dismiss()
         } catch {
             print("Failed to save changes: \(error.localizedDescription)")

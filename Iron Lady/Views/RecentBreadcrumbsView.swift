@@ -199,8 +199,12 @@ public struct RecentBreadcrumbsView: View {
                     
                     // MARK: - AdMob Banner
                     
-                    if !isLandscape {
+                    // MARK: - AdMob Banner
+                    if !isLandscape &&
+                       !AppDebugSettings.marketingScreenshotMode {
+
                         WaymarXBannerView()
+
                     }
                     
                     // MARK: - Bottom Navigation
