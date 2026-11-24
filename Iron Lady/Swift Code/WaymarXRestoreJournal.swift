@@ -31,9 +31,9 @@ struct WaymarXRestoreJournalRecord: Codable {
     var phase: WaymarXRestorePhase
 
     // Recovery locations.
-    let stagingFolderURL: URL
-    let safetyBackupURL: URL
-
+    var stagingFolderURL: URL
+    var safetyBackupURL: URL
+    
     // Expected database counts.
     let expectedPins: Int
     let expectedGroups: Int
@@ -52,7 +52,8 @@ struct WaymarXRestoreJournalRecord: Codable {
     init(
         stagingFolderURL: URL,
         safetyBackupURL: URL,
-        preview: WaymarXRestorePreview
+        preview: WaymarXRestorePreview,
+        preservedUserCount: Int
     ) {
         self.journalFormatVersion = 1
         self.operationID = UUID()
@@ -64,7 +65,7 @@ struct WaymarXRestoreJournalRecord: Codable {
 
         self.expectedPins = preview.pinCount
         self.expectedGroups = preview.groupCount
-        self.expectedUsers = preview.userCount
+        self.expectedUsers = preservedUserCount
 
         self.preparedPhotoNames = []
         self.expectedPinIDs = []
@@ -116,6 +117,72 @@ final class WaymarXRestoreJournal {
         }
     }
 
+    private func resolveRecoveryPaths(
+        in record: WaymarXRestoreJournalRecord
+    ) throws -> WaymarXRestoreJournalRecord {
+
+        var resolved = record
+
+        // The journal is stored at:
+        // Application Support/WaymarX/RestoreRecovery/active-restore.json
+
+        // Resolve paths relative to the CURRENT app container.
+        let waymarxFolder = try journalURL
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+
+        let stagingName =
+            record.stagingFolderURL.lastPathComponent
+
+        let safetyName =
+            record.safetyBackupURL.lastPathComponent
+
+        // Do not allow arbitrary paths from journal data.
+        guard UUID(uuidString: stagingName) != nil else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Invalid recovery staging folder identifier."
+            )
+        }
+
+        guard safetyName.hasPrefix("Safety_"),
+              safetyName.hasSuffix(".waymarxbackup") else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Invalid recovery safety backup filename."
+            )
+        }
+
+        let safetyID = String(
+            safetyName
+                .dropFirst("Safety_".count)
+                .dropLast(".waymarxbackup".count)
+        )
+
+        guard UUID(uuidString: safetyID) != nil else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Invalid recovery safety backup identifier."
+            )
+        }
+
+        resolved.stagingFolderURL = waymarxFolder
+            .appendingPathComponent(
+                "RestoreStaging",
+                isDirectory: true
+            )
+            .appendingPathComponent(
+                stagingName,
+                isDirectory: true
+            )
+
+        resolved.safetyBackupURL = waymarxFolder
+            .appendingPathComponent(
+                "SafetyBackups",
+                isDirectory: true
+            )
+            .appendingPathComponent(safetyName)
+
+        return resolved
+    }
+
     // MARK: - Load Journal
 
     func load() throws -> WaymarXRestoreJournalRecord? {
@@ -141,7 +208,7 @@ final class WaymarXRestoreJournal {
             )
         }
 
-        return record
+        return try resolveRecoveryPaths(in: record)
     }
 
     // MARK: - Save Journal

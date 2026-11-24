@@ -65,11 +65,17 @@ struct EditProfileView: View {
     @State private var pendingRestore: PendingWaymarXRestore?
     @State private var restoreFileForCleanup: URL?
     
+#if DEBUG && targetEnvironment(simulator)
+@State private var showSimulatorRestoreConfirmation = false
+@State private var simulatorRestoreInProgress = false
+#endif
+    
     @State private var safetyBackupURL: URL?
     @State private var safetyBackupMessage: String?
     
     @State private var showSafetyBackupExporter = false
     @State private var recoveryCopyExported = false
+    
     
 #if DEBUG
 @State private var stagingTestMessage: String?
@@ -623,6 +629,203 @@ struct EditProfileView: View {
 
                         #endif
 
+
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            guard let safetyBackupURL else {
+                                stagingTestMessage =
+                                    "Create a Safety Backup before running this test."
+                                return
+                            }
+
+                            do {
+                                let matched = try WaymarXRestoreManager.shared
+                                    .verifySafetyBackupAgainstCurrentDatabase(
+                                        safetyBackupURL: safetyBackupURL,
+                                        context: viewContext
+                                    )
+
+                                if matched {
+                                    stagingTestMessage = """
+                                    SAFETY BACKUP MATCH TEST PASSED
+
+                                    The safety backup matches the current
+                                    database counts, record identifiers,
+                                    and checked pin properties.
+
+                                    Existing Core Data records unchanged.
+                                    """
+                                }
+
+                            } catch {
+                                stagingTestMessage = """
+                                SAFETY BACKUP MATCH TEST FAILED
+
+                                \(error.localizedDescription)
+                                """
+                            }
+                        } label: {
+                            Label(
+                                "Test Safety Backup Match",
+                                systemImage: "shield.lefthalf.filled"
+                            )
+                        }
+
+                        #endif
+
+                        
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            do {
+                                _ = try WaymarXRestoreManager.shared
+                                    .verifySafetyBackupAgainstCurrentDatabase(
+                                        safetyBackupURL: pending.fileURL,
+                                        context: viewContext
+                                    )
+
+                                stagingTestMessage = """
+                                NEGATIVE TEST FAILED
+
+                                The incorrect backup was accepted.
+                                This must be investigated.
+                                """
+
+                            } catch {
+                                stagingTestMessage = """
+                                NEGATIVE TEST PASSED
+
+                                The incorrect backup was rejected.
+
+                                Reason:
+                                \(error.localizedDescription)
+
+                                Existing database unchanged.
+                                """
+                            }
+                        } label: {
+                            Label(
+                                "Test Incorrect Safety Backup",
+                                systemImage: "exclamationmark.shield"
+                            )
+                        }
+
+                        #endif
+
+                        
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            showSimulatorRestoreConfirmation = true
+                        } label: {
+                            Label(
+                                "Execute Test Restore (Simulator)",
+                                systemImage: "arrow.triangle.2.circlepath.circle.fill"
+                            )
+                        }
+                        .disabled(
+                            simulatorRestoreInProgress ||
+                            pendingRestore == nil ||
+                            safetyBackupURL == nil
+                        )
+                        .confirmationDialog(
+                            "Replace Simulator Database?",
+                            isPresented: $showSimulatorRestoreConfirmation,
+                            titleVisibility: .visible
+                        ) {
+                            Button(
+                                "Replace Simulator Data",
+                                role: .destructive
+                            ) {
+                                guard let pending = pendingRestore,
+                                      let safetyURL = safetyBackupURL else {
+                                    stagingTestMessage =
+                                        "A selected backup and safety backup are required."
+                                    return
+                                }
+
+                                simulatorRestoreInProgress = true
+
+                                stagingTestMessage = """
+                                RESTORE TRANSACTION STARTED
+
+                                Do not close the simulator or modify any pins.
+                                """
+
+                                Task { @MainActor in
+                                    do {
+                                        let result = try await
+                                            WaymarXRestoreCoordinator.shared
+                                                .executeSimulatorReplacement(
+                                                    sourceURL: pending.fileURL,
+                                                    safetyBackupURL: safetyURL,
+                                                    container:
+                                                        PersistenceController.shared.container
+                                                )
+
+                                        stagingTestMessage = """
+                                        SIMULATOR RESTORE COMMITTED
+
+                                        Pins: \(result.restoration.pins)
+                                        Groups: \(result.restoration.groups)
+                                        Profiles: \(result.restoration.users)
+                                        Photos: \(result.restoration.photos)
+
+                                        Database verification passed.
+
+                                        STOP THE APP IN XCODE NOW.
+
+                                        Then restart it to test journal recovery.
+                                        """
+
+                                        print("✅ SIMULATOR TEST RESTORE SUCCEEDED")
+                                        print("Stop and restart the app now.")
+
+                                        // Deliberately keep the restore controls
+                                        // disabled until the app is restarted.
+
+                                    } catch {
+                                        stagingTestMessage = """
+                                        SIMULATOR RESTORE FAILED
+
+                                        \(error.localizedDescription)
+
+                                        Do not attempt another restore.
+
+                                        Preserve the simulator and recovery journal.
+                                        Review the error before restarting.
+                                        """
+
+                                        print("❌ SIMULATOR RESTORE FAILED")
+                                        print(error.localizedDescription)
+
+                                        // Keep controls disabled after failure.
+                                        // The journal may require recovery.
+                                    }
+                                }
+                            }
+
+                            Button("Cancel", role: .cancel) {}
+
+                        } message: {
+                            Text(
+                                """
+                                This will replace the simulator's saved pins,
+                                groups and photograph references.
+
+                                The existing local profile will be preserved.
+
+                                A verified safety backup is required.
+
+                                You must restart WaymarX after the operation.
+                                """
+                            )
+                        }
+
+                        #endif
+
+                        
                         // EXISTING: Leave this disabled.
                         Button("Restore Backup") {
                         }

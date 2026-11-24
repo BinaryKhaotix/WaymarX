@@ -1035,8 +1035,7 @@ extension WaymarXRestoreManager {
                 // Nothing is committed until context.save().
                 for entity in [
                     "Breadcrumb",
-                    "CrmGroup",
-                    "CrumbUser"
+                    "CrmGroup"
                 ] {
                     let request = NSFetchRequest<NSManagedObject>(
                         entityName: entity
@@ -1115,25 +1114,15 @@ extension WaymarXRestoreManager {
                     }
                 }
 
-                // Restore profiles without passwords.
-                for item in backup.users {
-                    let user = CrumbUser(context: context)
-
-                    user.username = item.username
-                    user.name = item.name
-                    user.address = item.address
-                    user.phoneNumber = item.phoneNumber
-                    user.homeLatitude = item.homeLatitude
-                    user.homeLongitude = item.homeLongitude
-                    user.profilePicture = item.profilePicture
-                }
-
+                // Profiles belong to the local installation.
+                // Preserve their existing count during restoration.
+                let preservedUserCount = try count("CrumbUser")
                 // Evaluate changes before saving.
                 context.processPendingChanges()
 
                 guard try count("Breadcrumb") == preview.pinCount,
                       try count("CrmGroup") == preview.groupCount,
-                      try count("CrumbUser") == preview.userCount else {
+                      try count("CrumbUser") == preservedUserCount else {
 
                     throw WaymarXRestoreError.invalidBackup(
                         "Replacement record counts do not match."
@@ -1146,7 +1135,7 @@ extension WaymarXRestoreManager {
                 return WaymarXRestoreResult(
                     pins: preview.pinCount,
                     groups: preview.groupCount,
-                    users: preview.userCount,
+                    users: preservedUserCount,
                     photos: prepared.filenameMap.count
                 )
 
@@ -1226,7 +1215,8 @@ extension WaymarXRestoreManager {
             let record = WaymarXRestoreJournalRecord(
                 stagingFolderURL: staged.folderURL,
                 safetyBackupURL: safetyBackupURL,
-                preview: staged.preview
+                preview: staged.preview,
+                preservedUserCount: safetyPreview.userCount
             )
 
             try journal.save(record)
@@ -1296,8 +1286,22 @@ extension WaymarXRestoreManager {
         container: NSPersistentContainer
     ) async throws -> WaymarXDatabaseVerification {
 
-        let backup = staged.backup
-        let filenameMap = prepared.filenameMap
+        return try await verifyReplacementDatabase(
+            backup: staged.backup,
+            originalPhotoFolder: staged.photoFolderURL,
+            filenameMap: prepared.filenameMap,
+            container: container
+        )
+    }
+
+    // The actual verifier can now be called both during
+    // restoration and after a restart.
+    func verifyReplacementDatabase(
+        backup: WaymarXBackup,
+        originalPhotoFolder: URL,
+        filenameMap: [String: String],
+        container: NSPersistentContainer
+    ) async throws -> WaymarXDatabaseVerification {
 
         let documents = FileManager.default.urls(
             for: .documentDirectory,
@@ -1312,6 +1316,7 @@ extension WaymarXRestoreManager {
             let fm = FileManager.default
             var problems: [String] = []
             var photosVerified = 0
+            var verifiedPhotoNames = Set<String>()
 
             // Read the actual persisted records.
             let pins = try context.fetch(
@@ -1342,10 +1347,20 @@ extension WaymarXRestoreManager {
                 problems.append("Group count does not match.")
             }
 
-            if users.count != backup.users.count {
-                problems.append("Profile count does not match.")
+            guard let journalRecord =
+                try WaymarXRestoreJournal.shared.load() else {
+
+                throw WaymarXRestoreError.invalidBackup(
+                    "The restore journal is missing during verification."
+                )
             }
 
+            if users.count != journalRecord.expectedUsers {
+                problems.append(
+                    "Preserved local profile count does not match."
+                )
+            }
+            
             // MARK: - Verify Group Identifiers
 
             let expectedGroupIDs = Set(
@@ -1362,6 +1377,63 @@ extension WaymarXRestoreManager {
                 )
             }
 
+            
+            // MARK: - Verify Complete Group Data
+
+            var actualGroupsByID: [UUID: CrmGroup] = [:]
+
+            for group in groups {
+
+                guard let id = group.id else {
+                    problems.append(
+                        "A saved group has no identifier."
+                    )
+                    continue
+                }
+
+                if actualGroupsByID[id] != nil {
+                    problems.append(
+                        "Duplicate group identifier: \(id)"
+                    )
+                    continue
+                }
+
+                actualGroupsByID[id] = group
+            }
+
+            for expected in backup.groups {
+
+                guard let actual =
+                    actualGroupsByID[expected.id] else {
+
+                    problems.append(
+                        "Missing group: \(expected.id)"
+                    )
+                    continue
+                }
+
+                if actual.groupName != expected.groupName {
+                    problems.append(
+                        "Group name differs: \(expected.id)"
+                    )
+                }
+
+                if actual.groupDescription !=
+                    expected.groupDescription {
+
+                    problems.append(
+                        "Group description differs: \(expected.id)"
+                    )
+                }
+
+                if actual.dateCreated != expected.dateCreated {
+                    problems.append(
+                        "Group creation date differs: \(expected.id)"
+                    )
+                }
+            }
+
+            
             // MARK: - Verify Pin Identifiers
 
             let expectedPinIDs = Set(
@@ -1459,6 +1531,7 @@ extension WaymarXRestoreManager {
                     let photoURL = documents
                         .appendingPathComponent(expectedPhoto)
 
+
                     if let properties = try? photoURL.resourceValues(
                         forKeys: [
                             .isRegularFileKey,
@@ -1468,9 +1541,49 @@ extension WaymarXRestoreManager {
                     properties.isRegularFile == true,
                     properties.isSymbolicLink != true {
 
-                        photosVerified += 1
+                        // Find the photograph inside the extracted
+                        // backup using its ORIGINAL filename.
+                        let sourcePhotoURL = originalPhotoFolder
+                            .appendingPathComponent(originalPhoto!)
+
+                        // Validate the original file too.
+                        let sourceProperties = try? sourcePhotoURL.resourceValues(
+                            forKeys: [
+                                .isRegularFileKey,
+                                .isSymbolicLinkKey
+                            ]
+                        )
+
+                        guard sourceProperties?.isRegularFile == true,
+                              sourceProperties?.isSymbolicLink != true else {
+
+                            problems.append(
+                                "Original backup photograph is missing or invalid: " +
+                                originalPhoto!
+                            )
+
+                            continue
+                        }
+
+                        // Compare original and restored file contents.
+                        if fm.contentsEqual(
+                            atPath: sourcePhotoURL.path,
+                            andPath: photoURL.path
+                        ) {
+
+                        if verifiedPhotoNames.insert(expectedPhoto).inserted {
+                            photosVerified += 1
+                        }
+                            
+                        } else {
+
+                            problems.append(
+                                "Photograph contents do not match: \(expectedPhoto)"
+                            )
+                        }
 
                     } else {
+
                         problems.append(
                             "Photograph missing or invalid: \(expectedPhoto)"
                         )
@@ -1478,6 +1591,46 @@ extension WaymarXRestoreManager {
                 }
             }
 
+            
+            // MARK: - Verify Complete Photo Manifest
+
+            let expectedPhotoNames = Set(filenameMap.values)
+
+            if expectedPhotoNames.count != filenameMap.count {
+                problems.append(
+                    "Duplicate destination photograph filenames detected."
+                )
+            }
+
+            if verifiedPhotoNames != expectedPhotoNames {
+
+                let missingNames = expectedPhotoNames
+                    .subtracting(verifiedPhotoNames)
+
+                let unexpectedNames = verifiedPhotoNames
+                    .subtracting(expectedPhotoNames)
+
+                if !missingNames.isEmpty {
+                    problems.append(
+                        "\(missingNames.count) expected photographs " +
+                        "were not successfully verified."
+                    )
+                }
+
+                if !unexpectedNames.isEmpty {
+                    problems.append(
+                        "\(unexpectedNames.count) unexpected photographs " +
+                        "were encountered."
+                    )
+                }
+            }
+
+            print(
+                "Photographs verified: " +
+                "\(photosVerified)/\(expectedPhotoNames.count)"
+            )
+
+            
             // MARK: - Results
 
             let matches = problems.isEmpty
@@ -1804,3 +1957,266 @@ extension WaymarXRestoreManager {
 }
 
 #endif
+
+extension WaymarXRestoreManager {
+
+    @MainActor
+    func verifySafetyBackupAgainstCurrentDatabase(
+        safetyBackupURL: URL,
+        context: NSManagedObjectContext
+    ) throws -> Bool {
+
+        guard !context.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "The database has unsaved changes."
+            )
+        }
+
+        // Extract and inspect the safety backup.
+        // This does not modify the active database.
+        let staged = try stageReplacement(
+            from: safetyBackupURL
+        )
+
+        defer {
+            try? discardStagedReplacement(staged)
+        }
+
+        let backup = staged.backup
+
+        // Fetch existing Core Data records.
+        let pins = try context.fetch(
+            NSFetchRequest<Breadcrumb>(
+                entityName: "Breadcrumb"
+            )
+        )
+
+        let groups = try context.fetch(
+            NSFetchRequest<CrmGroup>(
+                entityName: "CrmGroup"
+            )
+        )
+
+        let users = try context.fetch(
+            NSFetchRequest<CrumbUser>(
+                entityName: "CrumbUser"
+            )
+        )
+
+        // Verify counts.
+        guard pins.count == backup.breadcrumbs.count,
+              groups.count == backup.groups.count,
+              users.count == backup.users.count else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Safety backup record counts differ from the current database."
+            )
+        }
+
+        // Verify exact group identities.
+        let currentGroupIDs = groups.compactMap(\.id)
+        let backupGroupIDs = backup.groups.map(\.id)
+
+        guard currentGroupIDs.count == groups.count,
+              Set(currentGroupIDs).count == groups.count,
+              Set(currentGroupIDs) == Set(backupGroupIDs) else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Safety backup group identifiers do not match."
+            )
+        }
+
+        // Verify exact pin identities.
+        let currentPinIDs = pins.compactMap(\.id)
+        let backupPinIDs = backup.breadcrumbs.map(\.backupID)
+
+        guard currentPinIDs.count == pins.count,
+              Set(currentPinIDs).count == pins.count,
+              Set(currentPinIDs) == Set(backupPinIDs) else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Safety backup pin identifiers do not match."
+            )
+        }
+
+        // Build a lookup table of existing pins.
+        var pinsByID: [UUID: Breadcrumb] = [:]
+
+        for pin in pins {
+            guard let id = pin.id else {
+                throw WaymarXRestoreError.invalidBackup(
+                    "An existing pin has no identifier."
+                )
+            }
+
+            pinsByID[id] = pin
+        }
+
+        // Compare important pin values and relationships.
+        for expected in backup.breadcrumbs {
+
+            guard let actual = pinsByID[expected.backupID] else {
+                throw WaymarXRestoreError.invalidBackup(
+                    "A safety backup pin is missing."
+                )
+            }
+
+            guard actual.latitude == expected.latitude,
+                  actual.longitude == expected.longitude,
+                  actual.name == expected.name,
+                  actual.note == expected.note,
+                  actual.isFavorite == expected.isFavorite,
+                  actual.photoURL == expected.photoURL,
+                  actual.crmGroup?.id == expected.groupID else {
+
+                throw WaymarXRestoreError.invalidBackup(
+                    "Safety backup pin data differs: \(expected.backupID)"
+                )
+            }
+        }
+
+        // A match requires more than identical record counts.
+        // Profile values and remaining fields still need
+        // full comparison before production replacement.
+
+        print("✅ Safety backup baseline comparison passed")
+        print("Pins: \(pins.count)")
+        print("Groups: \(groups.count)")
+        print("Profiles: \(users.count)")
+
+        return true
+    }
+}
+
+extension WaymarXRestoreManager {
+
+    func verifyReplacementFromJournal(
+        record: WaymarXRestoreJournalRecord,
+        container: NSPersistentContainer
+    ) async throws -> WaymarXDatabaseVerification {
+
+        let fm = FileManager.default
+        let folder = record.stagingFolderURL
+
+        // The original extracted staging directory
+        // must still exist.
+        var isDirectory: ObjCBool = false
+
+        guard fm.fileExists(
+            atPath: folder.path,
+            isDirectory: &isDirectory
+        ), isDirectory.boolValue else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Original restore staging directory is missing."
+            )
+        }
+
+        // Locate the original backup.json.
+        guard let enumerator = fm.enumerator(
+            at: folder,
+            includingPropertiesForKeys: [
+                .isRegularFileKey,
+                .isSymbolicLinkKey
+            ]
+        ) else {
+            throw WaymarXRestoreError.missingBackupJSON
+        }
+
+        var jsonFiles: [URL] = []
+
+        for case let url as URL in enumerator {
+            if url.lastPathComponent == "backup.json" {
+                jsonFiles.append(url)
+            }
+        }
+
+        guard jsonFiles.count == 1,
+              let jsonURL = jsonFiles.first else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery requires exactly one backup.json."
+            )
+        }
+
+        let jsonProperties = try jsonURL.resourceValues(
+            forKeys: [
+                .isRegularFileKey,
+                .isSymbolicLinkKey
+            ]
+        )
+
+        guard jsonProperties.isRegularFile == true,
+              jsonProperties.isSymbolicLink != true else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery backup.json is not a regular file."
+            )
+        }
+
+        // Decode the original staged backup.
+        let backup = try BackupManager.shared.decodeBackup(
+            from: Data(contentsOf: jsonURL)
+        )
+
+        guard backup.backupFormatVersion == 1 else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Unsupported staged backup format."
+            )
+        }
+
+        // Check that the staged data agrees with
+        // the identities and counts in the journal.
+        let pinIDs = backup.breadcrumbs.map(\.backupID)
+        let groupIDs = backup.groups.map(\.id)
+
+        guard backup.breadcrumbs.count == record.expectedPins,
+              backup.groups.count == record.expectedGroups,
+              Set(pinIDs).count == pinIDs.count,
+              Set(groupIDs).count == groupIDs.count,
+              Set(pinIDs) == Set(record.expectedPinIDs),
+              Set(groupIDs) == Set(record.expectedGroupIDs) else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Staged backup differs from recovery journal."
+            )
+        }
+
+        let originalPhotoNames = Set(
+            backup.breadcrumbs.compactMap(\.photoURL)
+                .filter { !$0.isEmpty }
+        )
+
+        guard Set(record.photoFilenameMap.keys) ==
+                originalPhotoNames,
+              Set(record.photoFilenameMap.values).count ==
+                record.photoFilenameMap.count else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery photograph mapping is invalid."
+            )
+        }
+
+        // Photograph source files remain in the
+        // original staging directory.
+        let photosFolder = jsonURL
+            .deletingLastPathComponent()
+            .appendingPathComponent(
+                "photos",
+                isDirectory: true
+            )
+
+        print("🔍 Recovered original restore staging data")
+        print("Pins: \(backup.breadcrumbs.count)")
+        print("Groups: \(backup.groups.count)")
+        print("Photo mappings: \(record.photoFilenameMap.count)")
+
+        // Reuse the full existing database verifier.
+        return try await verifyReplacementDatabase(
+            backup: backup,
+            originalPhotoFolder: photosFolder,
+            filenameMap: record.photoFilenameMap,
+            container: container
+        )
+    }
+}

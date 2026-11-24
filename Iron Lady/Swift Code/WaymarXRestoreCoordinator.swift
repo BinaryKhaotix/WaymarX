@@ -85,6 +85,39 @@ final class WaymarXRestoreCoordinator {
             )
         }
 
+        
+        // MARK: - Verify Current Database Protection
+
+        // The safety backup must represent the database
+        // that is about to be replaced.
+        let safetyMatchesCurrentDatabase =
+            try manager.verifySafetyBackupAgainstCurrentDatabase(
+                safetyBackupURL: safetyBackupURL,
+                context: container.viewContext
+            )
+
+        guard safetyMatchesCurrentDatabase else {
+            throw WaymarXRestoreError.invalidBackup(
+                "The safety backup does not match the current database."
+            )
+        }
+
+        // Ensure the local profile count has not changed
+        // since preparation created the recovery journal.
+        let currentUserCount = try container.viewContext.count(
+            for: NSFetchRequest<NSFetchRequestResult>(
+                entityName: "CrumbUser"
+            )
+        )
+
+        guard currentUserCount == record.expectedUsers else {
+            throw WaymarXRestoreError.invalidBackup(
+                "The local profile count changed during preparation."
+            )
+        }
+
+        print("✅ Pre-commit safety verification passed")
+
         // MARK: - Record Commit Intention
 
         // This must happen BEFORE the database save.
@@ -338,6 +371,196 @@ extension WaymarXRestoreCoordinator {
             stagedGroups: backup.groups.count,
             preparedPhotos: prepared.copiedFiles.count
         )
+    }
+}
+
+#endif
+
+#if DEBUG && targetEnvironment(simulator)
+
+extension WaymarXRestoreCoordinator {
+
+    // Simulator-only finalization readiness check.
+    // This function never deletes or modifies anything.
+
+    func inspectCompletedRestoreForFinalization(
+        container: NSPersistentContainer
+    ) async throws -> WaymarXRecoveryInspection {
+
+        let journal = WaymarXRestoreJournal.shared
+
+        guard let record = try journal.load() else {
+            throw WaymarXRestoreError.invalidBackup(
+                "No restore journal exists."
+            )
+        }
+
+        // Only a restore explicitly marked completed
+        // is eligible for normal finalization.
+        guard record.phase == .completed else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Restore is not marked completed. Current phase: " +
+                record.phase.rawValue
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Unsaved Core Data changes prevent finalization."
+            )
+        }
+
+        // The original safety backup must remain available.
+        let safetyURL = record.safetyBackupURL
+
+        guard FileManager.default.fileExists(
+            atPath: safetyURL.path
+        ) else {
+            throw WaymarXRestoreError.invalidBackup(
+                "The original safety backup is missing."
+            )
+        }
+
+        // Confirm the safety archive is still readable.
+        _ = try WaymarXRestoreManager.shared
+            .validateArchive(at: safetyURL)
+
+        // Inspect the current database against
+        // the committed replacement manifest.
+        guard let inspection = try await inspectPendingRestore(
+            container: container
+        ) else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery journal disappeared during inspection."
+            )
+        }
+
+        guard inspection.databaseMatchesManifest else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Database differs from the recovery manifest: " +
+                inspection.problems.joined(separator: "; ")
+            )
+        }
+
+        // Check the persisted expected counts explicitly.
+        guard inspection.actualPins == record.expectedPins,
+              inspection.actualGroups == record.expectedGroups,
+              inspection.actualUsers == record.expectedUsers else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Restored record counts do not match the journal."
+            )
+        }
+
+        
+        // MARK: - Verify Complete Restored Data
+
+        let fullVerification =
+            try await WaymarXRestoreManager.shared
+                .verifyReplacementFromJournal(
+                    record: record,
+                    container: container
+                )
+
+        guard fullVerification.matchesBackup else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Full recovery verification failed: " +
+                fullVerification.problems.joined(separator: "; ")
+            )
+        }
+
+        print("✅ Full database recovery verification passed")
+        print(
+            "Unique photographs verified: " +
+            "\(fullVerification.photosVerified)"
+        )
+
+        
+        print("✅ Completed restore passed manifest inspection")
+        print("Pins: \(inspection.actualPins)")
+        print("Groups: \(inspection.actualGroups)")
+        print("Profiles: \(inspection.actualUsers)")
+        print("Safety backup remains available")
+
+        // IMPORTANT:
+        // Do not clear the journal here.
+        // Full-field and photo-content verification
+        // must pass before final cleanup.
+
+        return inspection
+    }
+}
+
+#endif
+
+#if DEBUG && targetEnvironment(simulator)
+
+extension WaymarXRestoreCoordinator {
+
+    func finalizeCompletedSimulatorRestore(
+        container: NSPersistentContainer
+    ) async throws {
+
+        let journal = WaymarXRestoreJournal.shared
+
+        guard let record = try journal.load() else {
+            throw WaymarXRestoreError.invalidBackup(
+                "No recovery journal exists to finalize."
+            )
+        }
+
+        guard record.phase == .completed else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Cannot finalize a restore in phase: " +
+                record.phase.rawValue
+            )
+        }
+
+        // Reuse the verified completed-restore inspector.
+        // This checks the safety archive, manifest,
+        // database fields and photograph contents.
+        _ = try await inspectCompletedRestoreForFinalization(
+            container: container
+        )
+
+        // Confirm the operation hasn't changed while
+        // asynchronous verification was running.
+        guard let latestRecord = try journal.load(),
+              latestRecord.operationID == record.operationID,
+              latestRecord.phase == .completed else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery journal changed during verification."
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Unsaved changes prevent recovery finalization."
+            )
+        }
+
+        // IMPORTANT:
+        // Keep both the safety backup and staging files.
+        // They provide an additional recovery source.
+        //
+        // The journal is the only file removed here.
+        // This is permitted only after verification.
+
+        try journal.clear()
+
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery journal cleanup failed."
+            )
+        }
+
+        print("✅ SIMULATOR RESTORE FINALIZED")
+        print("✅ Full database verification passed")
+        print("✅ Safety backup preserved")
+        print("✅ Staging data preserved")
+        print("✅ Recovery journal cleared")
     }
 }
 
