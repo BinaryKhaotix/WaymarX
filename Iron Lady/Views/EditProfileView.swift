@@ -713,6 +713,100 @@ struct EditProfileView: View {
 
                         #endif
 
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            guard let pending = pendingRestore,
+                                  let safetyURL = safetyBackupURL else {
+                                stagingTestMessage =
+                                    "Select a backup and create a safety backup first."
+                                return
+                            }
+
+                            do {
+                                let journal = WaymarXRestoreJournal.shared
+                                let manager = WaymarXRestoreManager.shared
+
+                                guard try !journal.hasPendingRestore else {
+                                    throw WaymarXRestoreError.invalidBackup(
+                                        "An unfinished restoration already exists."
+                                    )
+                                }
+
+                                guard !viewContext.hasChanges else {
+                                    throw WaymarXRestoreError.invalidBackup(
+                                        "Save pending changes before testing."
+                                    )
+                                }
+
+                                // Prove the safety backup matches the
+                                // current database before preparation.
+                                _ = try manager
+                                    .verifySafetyBackupAgainstCurrentDatabase(
+                                        safetyBackupURL: safetyURL,
+                                        context: viewContext
+                                    )
+
+                                // Run the REAL preparation process.
+                                // This copies photographs and creates
+                                // the persistent recovery journal.
+                                // It does NOT replace Core Data.
+                                let transaction = try manager
+                                    .prepareRestoreTransaction(
+                                        from: pending.fileURL,
+                                        safetyBackupURL: safetyURL
+                                    )
+
+                                guard let record = try journal.load(),
+                                      record.phase == .readyToCommit else {
+                                    throw WaymarXRestoreError.invalidBackup(
+                                        "Preparation did not reach readyToCommit."
+                                    )
+                                }
+
+                                stagingTestMessage = """
+                                INTERRUPTION TEST PREPARED
+
+                                Incoming pins: \(transaction.staged.preview.pinCount)
+                                Incoming groups: \(transaction.staged.preview.groupCount)
+
+                                Recovery journal: readyToCommit
+
+                                CORE DATA HAS NOT BEEN REPLACED.
+
+                                Stop WaymarX in Xcode now.
+                                """
+
+                                print("🧪 PRE-COMMIT INTERRUPTION INJECTED")
+                                print("Journal phase: readyToCommit")
+                                print("Stop the app to simulate interruption.")
+
+                            } catch {
+                                stagingTestMessage = """
+                                INTERRUPTION TEST FAILED
+
+                                \(error.localizedDescription)
+
+                                Do not start another restore until
+                                the recovery journal is inspected.
+                                """
+                            }
+
+                        } label: {
+                            Label(
+                                "Inject Pre-Commit Interruption",
+                                systemImage: "bolt.shield"
+                            )
+                        }
+                        .disabled(
+                            simulatorRestoreInProgress ||
+                            pendingRestore == nil ||
+                            safetyBackupURL == nil
+                        )
+
+                        #endif
+
+                        
                         
                         #if DEBUG && targetEnvironment(simulator)
 

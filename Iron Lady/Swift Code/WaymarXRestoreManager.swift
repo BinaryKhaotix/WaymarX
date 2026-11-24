@@ -2026,6 +2026,40 @@ extension WaymarXRestoreManager {
             )
         }
 
+        // Verify group properties, not just identifiers.
+        var currentGroupsByID: [UUID: CrmGroup] = [:]
+
+        for group in groups {
+            guard let id = group.id else {
+                throw WaymarXRestoreError.invalidBackup(
+                    "A current group has no identifier."
+                )
+            }
+
+            currentGroupsByID[id] = group
+        }
+
+        for expected in backup.groups {
+
+            guard let actual = currentGroupsByID[expected.id] else {
+                throw WaymarXRestoreError.invalidBackup(
+                    "Safety backup group is missing."
+                )
+            }
+
+            guard
+                actual.groupName == expected.groupName,
+                actual.groupDescription ==
+                    expected.groupDescription,
+                actual.dateCreated == expected.dateCreated
+            else {
+                throw WaymarXRestoreError.invalidBackup(
+                    "Safety backup group data differs: \(expected.id)"
+                )
+            }
+        }
+
+        
         // Verify exact pin identities.
         let currentPinIDs = pins.compactMap(\.id)
         let backupPinIDs = backup.breadcrumbs.map(\.backupID)
@@ -2055,26 +2089,132 @@ extension WaymarXRestoreManager {
         // Compare important pin values and relationships.
         for expected in backup.breadcrumbs {
 
+            // Find the current Core Data pin matching
+            // this backup record.
             guard let actual = pinsByID[expected.backupID] else {
                 throw WaymarXRestoreError.invalidBackup(
-                    "A safety backup pin is missing."
+                    "Safety backup pin is missing: \(expected.backupID)"
                 )
             }
 
-            guard actual.latitude == expected.latitude,
-                  actual.longitude == expected.longitude,
-                  actual.name == expected.name,
-                  actual.note == expected.note,
-                  actual.isFavorite == expected.isFavorite,
-                  actual.photoURL == expected.photoURL,
-                  actual.crmGroup?.id == expected.groupID else {
+            guard
+                actual.latitude == expected.latitude,
+                actual.longitude == expected.longitude,
 
+                actual.name == expected.name,
+                actual.note == expected.note,
+                actual.dateDropped == expected.dateDropped,
+
+                actual.isFavorite == expected.isFavorite,
+                actual.isWantToGo == expected.isWantToGo,
+
+                actual.streetAddress == expected.streetAddress,
+                actual.city == expected.city,
+                actual.state == expected.state,
+                actual.zipCode == expected.zipCode,
+
+                actual.wantToGoDate == expected.wantToGoDate,
+                actual.visitedDate == expected.visitedDate,
+
+                actual.arrivalRadius?.doubleValue ==
+                    expected.arrivalRadius,
+
+                actual.photoURL == expected.photoURL,
+                actual.crmGroup?.id == expected.groupID
+
+            else {
                 throw WaymarXRestoreError.invalidBackup(
                     "Safety backup pin data differs: \(expected.backupID)"
                 )
             }
+            
+            // Confirm that the safety archive photograph
+            // matches the current photograph on disk.
+            if let photoName = expected.photoURL,
+               !photoName.isEmpty {
+
+                let currentPhotoURL = FileManager.default
+                    .urls(
+                        for: .documentDirectory,
+                        in: .userDomainMask
+                    )[0]
+                    .appendingPathComponent(photoName)
+
+                let archivedPhotoURL = staged.photoFolderURL
+                    .appendingPathComponent(photoName)
+
+                let currentProperties = try currentPhotoURL
+                    .resourceValues(
+                        forKeys: [
+                            .isRegularFileKey,
+                            .isSymbolicLinkKey
+                        ]
+                    )
+
+                let archivedProperties = try archivedPhotoURL
+                    .resourceValues(
+                        forKeys: [
+                            .isRegularFileKey,
+                            .isSymbolicLinkKey
+                        ]
+                    )
+
+                guard currentProperties.isRegularFile == true,
+                      currentProperties.isSymbolicLink != true,
+                      archivedProperties.isRegularFile == true,
+                      archivedProperties.isSymbolicLink != true,
+                      FileManager.default.contentsEqual(
+                          atPath: currentPhotoURL.path,
+                          andPath: archivedPhotoURL.path
+                      ) else {
+
+                    throw WaymarXRestoreError.invalidBackup(
+                        "Safety backup photograph differs: \(photoName)"
+                    )
+                }
+            }
         }
 
+        // MARK: - Verify Local Profile Data
+
+        // Passwords are deliberately excluded from backups.
+        // Compare only properties actually stored in the archive.
+
+        var unmatchedProfiles = users
+
+        for expected in backup.users {
+
+            guard let index = unmatchedProfiles.firstIndex(
+                where: { actual in
+
+                    actual.username == expected.username &&
+                    actual.name == expected.name &&
+                    actual.address == expected.address &&
+                    actual.phoneNumber == expected.phoneNumber &&
+                    actual.homeLatitude == expected.homeLatitude &&
+                    actual.homeLongitude == expected.homeLongitude &&
+                    actual.profilePicture == expected.profilePicture
+
+                }
+            ) else {
+
+                throw WaymarXRestoreError.invalidBackup(
+                    "Safety backup profile data does not match."
+                )
+            }
+
+            unmatchedProfiles.remove(at: index)
+        }
+
+        guard unmatchedProfiles.isEmpty else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Safety backup is missing local profile data."
+            )
+        }
+
+        print("✅ Local profile backup verified")
+
+        
         // A match requires more than identical record counts.
         // Profile values and remaining fields still need
         // full comparison before production replacement.

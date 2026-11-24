@@ -47,7 +47,14 @@ final class WaymarXRestoreCoordinator {
                 "Save existing changes before restoring."
             )
         }
+        // MARK: - Storage Preflight
 
+        try WaymarXStorageGuard.verifyAvailableSpace(
+            forArchive: sourceURL
+        )
+
+        print("✅ Restore storage preflight passed")
+        
         // MARK: - Prepare
 
         let transaction = try manager.prepareRestoreTransaction(
@@ -560,6 +567,201 @@ extension WaymarXRestoreCoordinator {
         print("✅ Full database verification passed")
         print("✅ Safety backup preserved")
         print("✅ Staging data preserved")
+        print("✅ Recovery journal cleared")
+    }
+}
+
+#endif
+
+#if DEBUG && targetEnvironment(simulator)
+
+extension WaymarXRestoreCoordinator {
+
+    func recoverAbandonedSimulatorPreparation(
+        container: NSPersistentContainer
+    ) throws {
+
+        let journal = WaymarXRestoreJournal.shared
+        let manager = WaymarXRestoreManager.shared
+        let fm = FileManager.default
+
+        guard let record = try journal.load() else {
+            throw WaymarXRestoreError.invalidBackup(
+                "No recovery journal was found."
+            )
+        }
+
+        // Never clean up a transaction that may
+        // have started committing Core Data.
+        guard record.phase == .readyToCommit else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Automatic preparation cleanup is not permitted " +
+                "for phase: \(record.phase.rawValue)"
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Unsaved database changes prevent recovery."
+            )
+        }
+
+        // Confirm the original database still matches
+        // its verified safety backup.
+        _ = try manager.verifySafetyBackupAgainstCurrentDatabase(
+            safetyBackupURL: record.safetyBackupURL,
+            context: container.viewContext
+        )
+
+        // Verify that the staging directory belongs
+        // to the current WaymarX restore staging root.
+        let support = try fm.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+
+        let stagingRoot = support
+            .appendingPathComponent(
+                "WaymarX/RestoreStaging",
+                isDirectory: true
+            )
+            .standardizedFileURL
+
+        let stagingFolder = record.stagingFolderURL
+            .standardizedFileURL
+
+        guard
+            stagingFolder.deletingLastPathComponent() ==
+                stagingRoot,
+            UUID(
+                uuidString: stagingFolder.lastPathComponent
+            ) != nil
+        else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Unsafe recovery staging directory."
+            )
+        }
+
+        // All registered preparation photographs
+        // must agree with the completed photo manifest.
+        let preparedNames = Set(record.preparedPhotoNames)
+        let mappedNames = Set(
+            record.photoFilenameMap.values
+        )
+
+        guard preparedNames == mappedNames,
+              preparedNames.count ==
+                  record.preparedPhotoNames.count else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Recovery photograph manifest is inconsistent."
+            )
+        }
+
+        let documents = fm.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0]
+
+        // Validate every removal target BEFORE deleting
+        // any photograph.
+        var removablePhotos: [URL] = []
+
+        for name in preparedNames {
+
+            // Generated photo names begin with a UUID
+            // followed by an underscore.
+            let prefix = String(name.prefix(36))
+            let suffix = name.dropFirst(36)
+
+            guard UUID(uuidString: prefix) != nil,
+                  suffix.first == "_",
+                  suffix.count > 1,
+                  !name.contains("/"),
+                  !name.contains("\\"),
+                  name != ".",
+                  name != ".." else {
+
+                throw WaymarXRestoreError.invalidBackup(
+                    "Unsafe prepared photograph filename."
+                )
+            }
+
+            let photo = documents
+                .appendingPathComponent(name)
+                .standardizedFileURL
+
+            guard photo.deletingLastPathComponent() ==
+                    documents.standardizedFileURL else {
+
+                throw WaymarXRestoreError.invalidBackup(
+                    "Prepared photograph escapes Documents."
+                )
+            }
+
+            if fm.fileExists(atPath: photo.path) {
+
+                let properties = try photo.resourceValues(
+                    forKeys: [
+                        .isRegularFileKey,
+                        .isSymbolicLinkKey
+                    ]
+                )
+
+                guard properties.isRegularFile == true,
+                      properties.isSymbolicLink != true else {
+
+                    throw WaymarXRestoreError.invalidBackup(
+                        "Invalid prepared photograph."
+                    )
+                }
+
+                removablePhotos.append(photo)
+            }
+        }
+
+        // Check the directory itself before removal.
+        if fm.fileExists(atPath: stagingFolder.path) {
+
+            let properties = try stagingFolder.resourceValues(
+                forKeys: [
+                    .isDirectoryKey,
+                    .isSymbolicLinkKey
+                ]
+            )
+
+            guard properties.isDirectory == true,
+                  properties.isSymbolicLink != true else {
+
+                throw WaymarXRestoreError.invalidBackup(
+                    "Invalid restore staging directory."
+                )
+            }
+        }
+
+        // No database transaction was started.
+        // Remove only files registered by this
+        // preparation operation.
+        for photo in removablePhotos {
+            try fm.removeItem(at: photo)
+        }
+
+        if fm.fileExists(atPath: stagingFolder.path) {
+            try fm.removeItem(at: stagingFolder)
+        }
+
+        // Keep the original safety backup.
+
+        // Clear journal LAST, after successful cleanup.
+        try journal.clear()
+
+        print("✅ ABANDONED PREPARATION RECOVERED")
+        print("✅ Original database verified")
+        print("✅ Prepared photographs cleaned")
+        print("✅ Staging directory cleaned")
+        print("✅ Safety backup retained")
         print("✅ Recovery journal cleared")
     }
 }

@@ -110,7 +110,37 @@ struct WaymarXStartupRecoveryGate<Content: View>: View {
 
                 switch record.phase {
 
-                case .preparing, .photosPrepared, .readyToCommit:
+                case .readyToCommit:
+
+                    #if DEBUG && targetEnvironment(simulator)
+
+                    print("🧪 Recovering abandoned pre-commit restore")
+
+                    try WaymarXRestoreCoordinator.shared
+                        .recoverAbandonedSimulatorPreparation(
+                            container: PersistenceController.shared.container
+                        )
+
+                    print("✅ Pre-commit recovery completed")
+
+                    status = .ready
+                    onReady()
+
+                    #else
+
+                    status = .interrupted(
+                        """
+                        A restoration was interrupted before
+                        the database replacement began.
+
+                        Recovery is required before continuing.
+                        """
+                    )
+
+                    #endif
+
+                    
+                case .preparing, .photosPrepared:
 
                     // No commit should have started in these phases.
                     // Leave the journal intact until cleanup is verified.

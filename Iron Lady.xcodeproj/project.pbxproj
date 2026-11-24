@@ -91,6 +91,7 @@
 		E3F856F630B5151C00075DB4 /* WaymarXRestoreJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856F530B5151C00075DB4 /* WaymarXRestoreJournal.swift */; };
 		E3F856FA30B518F000075DB4 /* WaymarXStartupRecoveryGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856F930B518F000075DB4 /* WaymarXStartupRecoveryGate.swift */; };
 		E3F856FC30B525F200075DB4 /* WaymarXRestoreCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856FB30B525F200075DB4 /* WaymarXRestoreCoordinator.swift */; };
+		E3F856FE30B615EA00075DB4 /* WaymarXStorageGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F856FD30B615EA00075DB4 /* WaymarXStorageGuard.swift */; };
 		E3FCBD64304A48A500171417 /* WantToGoArrivalBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */; };
 		E3FCBD67304A51BA00171417 /* ContextualTip.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD66304A51BA00171417 /* ContextualTip.swift */; };
 		E3FCBD69304A520B00171417 /* ContextualTipManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FCBD68304A520B00171417 /* ContextualTipManager.swift */; };
@@ -188,6 +189,7 @@
 		E3F856F530B5151C00075DB4 /* WaymarXRestoreJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXRestoreJournal.swift; sourceTree = "<group>"; };
 		E3F856F930B518F000075DB4 /* WaymarXStartupRecoveryGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXStartupRecoveryGate.swift; sourceTree = "<group>"; };
 		E3F856FB30B525F200075DB4 /* WaymarXRestoreCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXRestoreCoordinator.swift; sourceTree = "<group>"; };
+		E3F856FD30B615EA00075DB4 /* WaymarXStorageGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaymarXStorageGuard.swift; sourceTree = "<group>"; };
 		E3FCBD63304A48A500171417 /* WantToGoArrivalBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WantToGoArrivalBanner.swift; sourceTree = "<group>"; };
 		E3FCBD66304A51BA00171417 /* ContextualTip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTip.swift; sourceTree = "<group>"; };
 		E3FCBD68304A520B00171417 /* ContextualTipManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTipManager.swift; sourceTree = "<group>"; };
@@ -360,6 +362,7 @@
 				E3F856F330B4E2DD00075DB4 /* WaymarXRestoreManager.swift */,
 				E3F856F530B5151C00075DB4 /* WaymarXRestoreJournal.swift */,
 				E3F856FB30B525F200075DB4 /* WaymarXRestoreCoordinator.swift */,
+				E3F856FD30B615EA00075DB4 /* WaymarXStorageGuard.swift */,
 			);
 			path = "Swift Code";
 			sourceTree = "<group>";
@@ -553,6 +556,7 @@
 				E3F856FA30B518F000075DB4 /* WaymarXStartupRecoveryGate.swift in Sources */,
 				E3E61D012D14EB53006FA68D /* BottomNavigationBar.swift in Sources */,
 				E366BA672D8B7AE6004D5FA4 /* ShareSheetHelper.swift in Sources */,
+				E3F856FE30B615EA00075DB4 /* WaymarXStorageGuard.swift in Sources */,
 				E3C8E54D2D0B5926005B9F0B /* TileContainerView.swift in Sources */,
 				E38AC9E3304B5DB000EEBB98 /* DiagnosticsEntry.swift in Sources */,
 				E350B49F30391A5200435068 /* BackupManager.swift in Sources */,
