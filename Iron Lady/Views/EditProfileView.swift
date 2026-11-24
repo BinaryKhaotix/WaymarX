@@ -71,7 +71,9 @@ struct EditProfileView: View {
     @State private var showSafetyBackupExporter = false
     @State private var recoveryCopyExported = false
     
-    
+#if DEBUG
+@State private var stagingTestMessage: String?
+#endif
     @StateObject private var adMobConsentManager = AdMobConsentManager.shared
 
     private var user: CrumbUser? { users.first }
@@ -515,11 +517,117 @@ struct EditProfileView: View {
 
                         }
 
+                        // Existing Save Recovery Copy button is above here.
+
+                        // NEW: Simulator-only staging test
+                        #if DEBUG
+                        #if targetEnvironment(simulator)
+
+                        Button {
+                            do {
+                                let result = try WaymarXRestoreManager.shared
+                                    .testReplacementStaging(
+                                        sourceURL: pending.fileURL,
+                                        context: viewContext
+                                    )
+
+                                stagingTestMessage = """
+                                STAGING TEST PASSED
+
+                                Existing database:
+                                \(result.originalPins) pins
+                                \(result.originalGroups) groups
+                                \(result.originalUsers) profiles
+
+                                Staged backup:
+                                \(result.stagedPins) pins
+                                \(result.stagedGroups) groups
+                                \(result.stagedPhotos) photos
+
+                                Existing database counts unchanged.
+                                """
+
+                            } catch {
+                                stagingTestMessage = """
+                                STAGING TEST FAILED
+
+                                \(error.localizedDescription)
+                                """
+                            }
+                        } label: {
+                            Label(
+                                "Test Backup Staging",
+                                systemImage: "checkmark.shield"
+                            )
+                        }
+
+                        if let stagingTestMessage {
+                            Text(stagingTestMessage)
+                                .font(.footnote)
+                                .monospaced()
+                        }
+
+                        #endif
+                        #endif
+
+                        
+                        #if DEBUG && targetEnvironment(simulator)
+
+                        Button {
+                            guard let safetyBackupURL else {
+                                stagingTestMessage =
+                                    "Create a Safety Backup before running this test."
+                                return
+                            }
+
+                            do {
+                                let result = try WaymarXRestoreCoordinator.shared
+                                    .testRestorePreparation(
+                                        sourceURL: pending.fileURL,
+                                        safetyBackupURL: safetyBackupURL,
+                                        context: viewContext
+                                    )
+
+                                stagingTestMessage = """
+                                JOURNAL PREPARATION TEST PASSED
+
+                                Original database:
+                                \(result.originalPins) pins
+                                \(result.originalGroups) groups
+                                \(result.originalUsers) profiles
+
+                                Prepared replacement:
+                                \(result.stagedPins) pins
+                                \(result.stagedGroups) groups
+                                \(result.preparedPhotos) photos
+
+                                Journal verified and cleaned up.
+                                Original records unchanged.
+                                """
+
+                            } catch {
+                                stagingTestMessage = """
+                                JOURNAL PREPARATION TEST FAILED
+
+                                \(error.localizedDescription)
+
+                                Do not delete app data or bypass the recovery gate.
+                                """
+                            }
+                        } label: {
+                            Label(
+                                "Test Restore Preparation",
+                                systemImage: "checkmark.shield.fill"
+                            )
+                        }
+
+                        #endif
+
+                        // EXISTING: Leave this disabled.
                         Button("Restore Backup") {
-                            // Database replacement will be implemented next.
                         }
                         .disabled(true)
-
+                        
                         Text(
                             "Restoration remains disabled until external recovery " +
                             "and safe database replacement are implemented."

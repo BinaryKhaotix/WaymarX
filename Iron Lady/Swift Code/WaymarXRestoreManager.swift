@@ -1688,3 +1688,119 @@ extension WaymarXRestoreManager {
         }
     }
 }
+
+#if DEBUG
+
+struct WaymarXStagingTestResult {
+    let originalPins: Int
+    let originalGroups: Int
+    let originalUsers: Int
+
+    let stagedPins: Int
+    let stagedGroups: Int
+    let stagedPhotos: Int
+}
+
+extension WaymarXRestoreManager {
+
+    @MainActor
+    func testReplacementStaging(
+        sourceURL: URL,
+        context: NSManagedObjectContext
+    ) throws -> WaymarXStagingTestResult {
+
+        #if targetEnvironment(simulator)
+
+        guard !context.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Save pending Core Data changes before testing."
+            )
+        }
+
+        guard try !WaymarXRestoreJournal.shared.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "A restore journal already exists."
+            )
+        }
+
+        func count(_ entity: String) throws -> Int {
+            try context.count(
+                for: NSFetchRequest<NSFetchRequestResult>(
+                    entityName: entity
+                )
+            )
+        }
+
+        // Record the existing database counts.
+        let beforePins = try count("Breadcrumb")
+        let beforeGroups = try count("CrmGroup")
+        let beforeUsers = try count("CrumbUser")
+
+        // Stage and validate. Does not alter Core Data.
+        let staged = try stageReplacement(from: sourceURL)
+
+        // Remove the staging directory when this test ends.
+        defer {
+            do {
+                try discardStagedReplacement(staged)
+                print("✅ Test staging directory removed")
+            } catch {
+                print("⚠️ Staging cleanup failed: \(error)")
+            }
+        }
+
+        guard staged.preview.photosMissing == 0 else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Staged backup contains missing photos."
+            )
+        }
+
+        // Verify the active database was not modified.
+        let afterPins = try count("Breadcrumb")
+        let afterGroups = try count("CrmGroup")
+        let afterUsers = try count("CrumbUser")
+
+        guard beforePins == afterPins,
+              beforeGroups == afterGroups,
+              beforeUsers == afterUsers,
+              !context.hasChanges else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Active Core Data counts changed during staging."
+            )
+        }
+
+        guard try !WaymarXRestoreJournal.shared.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Dry run unexpectedly created a restore journal."
+            )
+        }
+
+        print("✅ WAYMARX STAGING TEST PASSED")
+        print("Original pins: \(beforePins)")
+        print("Original groups: \(beforeGroups)")
+        print("Staged pins: \(staged.preview.pinCount)")
+        print("Staged groups: \(staged.preview.groupCount)")
+        print("Staged photos: \(staged.preview.photosFound)")
+        print("Original database unchanged")
+
+        return WaymarXStagingTestResult(
+            originalPins: beforePins,
+            originalGroups: beforeGroups,
+            originalUsers: beforeUsers,
+            stagedPins: staged.preview.pinCount,
+            stagedGroups: staged.preview.groupCount,
+            stagedPhotos: staged.preview.photosFound
+        )
+
+        #else
+
+        throw WaymarXRestoreError.invalidBackup(
+            "This test runs only in the simulator."
+        )
+
+        #endif
+    }
+}
+
+#endif

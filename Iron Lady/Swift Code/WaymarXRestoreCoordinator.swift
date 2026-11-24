@@ -190,3 +190,155 @@ extension WaymarXRestoreCoordinator {
         return inspection
     }
 }
+
+#if DEBUG && targetEnvironment(simulator)
+
+struct WaymarXPreparationTestResult {
+    let originalPins: Int
+    let originalGroups: Int
+    let originalUsers: Int
+    let stagedPins: Int
+    let stagedGroups: Int
+    let preparedPhotos: Int
+}
+
+extension WaymarXRestoreCoordinator {
+
+    func testRestorePreparation(
+        sourceURL: URL,
+        safetyBackupURL: URL,
+        context: NSManagedObjectContext
+    ) throws -> WaymarXPreparationTestResult {
+
+        let manager = WaymarXRestoreManager.shared
+        let journal = WaymarXRestoreJournal.shared
+
+        guard !context.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Save pending changes before testing."
+            )
+        }
+
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "An unfinished restore journal already exists."
+            )
+        }
+
+        // Capture actual Core Data object identities.
+        // These let us detect deleted or inserted objects.
+        func snapshot(_ entity: String) throws -> Set<NSManagedObjectID> {
+            let request = NSFetchRequest<NSManagedObject>(
+                entityName: entity
+            )
+            return Set(try context.fetch(request).map(\.objectID))
+        }
+
+        let originalPins = try snapshot("Breadcrumb")
+        let originalGroups = try snapshot("CrmGroup")
+        let originalUsers = try snapshot("CrumbUser")
+
+        print("🧪 STARTING JOURNAL PREPARATION TEST")
+
+        // This prepares data and photos but does NOT commit Core Data.
+        let transaction = try manager.prepareRestoreTransaction(
+            from: sourceURL,
+            safetyBackupURL: safetyBackupURL
+        )
+
+        // Verify the journal.
+        guard let record = try journal.load() else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Preparation did not create a journal."
+            )
+        }
+
+        let backup = transaction.staged.backup
+        let prepared = transaction.preparedPhotos
+
+        let expectedPinIDs = Set(backup.breadcrumbs.map(\.backupID))
+        let expectedGroupIDs = Set(backup.groups.map(\.id))
+
+        guard record.phase == .readyToCommit,
+              Set(record.expectedPinIDs) == expectedPinIDs,
+              Set(record.expectedGroupIDs) == expectedGroupIDs,
+              record.photoFilenameMap == prepared.filenameMap,
+              Set(record.preparedPhotoNames) ==
+                  Set(prepared.filenameMap.values),
+              prepared.filenameMap.count == 11 else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Journal or photograph manifest verification failed."
+            )
+        }
+
+        // Verify every prepared photograph exists.
+        let fm = FileManager.default
+
+        for url in prepared.copiedFiles {
+            let values = try url.resourceValues(
+                forKeys: [.isRegularFileKey, .isSymbolicLinkKey]
+            )
+
+            guard values.isRegularFile == true,
+                  values.isSymbolicLink != true else {
+                throw WaymarXRestoreError.invalidBackup(
+                    "A prepared photograph is missing or invalid."
+                )
+            }
+        }
+
+        // Verify Core Data was not replaced.
+        guard try snapshot("Breadcrumb") == originalPins,
+              try snapshot("CrmGroup") == originalGroups,
+              try snapshot("CrumbUser") == originalUsers,
+              !context.hasChanges else {
+
+            throw WaymarXRestoreError.invalidBackup(
+                "Core Data identities changed during preparation."
+            )
+        }
+
+        // Only a pre-commit operation may be cleaned up here.
+        guard record.phase == .readyToCommit else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Refusing cleanup after a possible database commit."
+            )
+        }
+
+        // Remove only files created during THIS preparation.
+        // Keep the verified safety backup.
+        try manager.discardPreparedPhotos(prepared)
+
+        try manager.discardStagedReplacement(
+            transaction.staged
+        )
+
+        // Clear the journal LAST.
+        try journal.clear()
+
+        guard try !journal.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Test cleanup did not clear the journal."
+            )
+        }
+
+        print("✅ JOURNAL PREPARATION TEST PASSED")
+        print("Original pins: \(originalPins.count)")
+        print("Original groups: \(originalGroups.count)")
+        print("Prepared photos: \(prepared.copiedFiles.count)")
+        print("Recovery journal cleaned up")
+        print("Original Core Data records unchanged")
+
+        return WaymarXPreparationTestResult(
+            originalPins: originalPins.count,
+            originalGroups: originalGroups.count,
+            originalUsers: originalUsers.count,
+            stagedPins: backup.breadcrumbs.count,
+            stagedGroups: backup.groups.count,
+            preparedPhotos: prepared.copiedFiles.count
+        )
+    }
+}
+
+#endif
