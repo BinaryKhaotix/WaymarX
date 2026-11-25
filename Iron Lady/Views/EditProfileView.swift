@@ -72,6 +72,11 @@ struct EditProfileView: View {
     @State private var simulatorRestoreInProgress = false
     #endif
     
+    #if DEBUG && targetEnvironment(simulator)
+    @State private var coordinatedRestoreHandoffURL: URL?
+    #endif
+    
+    
     @State private var safetyBackupURL: URL?
     @State private var safetyBackupMessage: String?
     
@@ -382,13 +387,30 @@ struct EditProfileView: View {
                 """
             }
         }
+
         .sheet(item: $pendingRestore, onDismiss: {
 
-            // Remove the staged file after the sheet closes.
+            // STEP 1: Delete the original temporary imported backup.
             if let stagedURL = restoreFileForCleanup {
                 try? FileManager.default.removeItem(at: stagedURL)
                 restoreFileForCleanup = nil
             }
+
+            #if DEBUG && targetEnvironment(simulator)
+
+            // STEP 2: If a coordinated restore was confirmed,
+            // start the restore screen after this sheet is gone.
+            if let handoffURL = coordinatedRestoreHandoffURL {
+
+                coordinatedRestoreHandoffURL = nil
+
+                WaymarXRestorePresentation.shared
+                    .beginPreparedRestore(
+                        handoffURL: handoffURL
+                    )
+            }
+
+            #endif
 
         }) { pending in
 
@@ -951,6 +973,47 @@ struct EditProfileView: View {
                         
                         #if DEBUG && targetEnvironment(simulator)
 
+
+
+                        Button {
+
+                            do {
+                                let handoffURL = try WaymarXRestoreCoordinator.shared
+                                    .preserveSelectedBackupForRestore(
+                                        from: pending.fileURL
+                                    )
+
+                                // Preserve the backup for the restore screen.
+                                coordinatedRestoreHandoffURL = handoffURL
+
+                                // Dismiss the backup review sheet.
+                                // Its onDismiss handler starts restore mode.
+                                pendingRestore = nil
+
+                                print("✅ Coordinated restore handoff ready")
+
+                            } catch {
+                                stagingTestMessage = """
+                                RESTORE HANDOFF FAILED
+
+                                \(error.localizedDescription)
+
+                                No database changes were made.
+                                """
+
+                                print("❌ Restore handoff failed: \(error)")
+                            }
+
+                        } label: {
+
+                            Label(
+                                "Test Coordinated Restore",
+                                systemImage: "arrow.triangle.2.circlepath"
+                            )
+                        }
+                        .disabled(simulatorRestoreInProgress)
+
+                        
                         Button {
                             print("🟢 AUTOMATIC RESTORE BUTTON TAPPED")
 

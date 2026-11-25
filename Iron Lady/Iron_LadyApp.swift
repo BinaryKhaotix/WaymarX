@@ -15,6 +15,8 @@ struct IronLadyApp: App {
     @StateObject private var navigationModel = NavigationModel()
     @StateObject private var locationManager = LocationManager()
     @StateObject private var breadcrumbStore = BreadcrumbStore()
+    @StateObject private var restorePresentation =
+        WaymarXRestorePresentation.shared
     
     @StateObject private var arrivalManager =
     WantToGoArrivalManager.shared
@@ -58,6 +60,15 @@ struct IronLadyApp: App {
                     WantToGoArrivalManager.shared.start()
                 }
             ) {
+                
+                if restorePresentation.isRestoring {
+
+                    WaymarXRestoreProgressView(
+                        presentation: restorePresentation
+                    )
+
+                } else {
+
                 
                 // ============================================================
                 // GLOBAL APP LAYER
@@ -620,12 +631,12 @@ struct IronLadyApp: App {
                         diagnosticsStore.updateAppState(
                             "Unknown"
                         )
-                    }
-                }
-            }
-        }
+                    } // Closes switch
+                } // Closes onChange
+            } // Closes normal-app else branch
+        } // Closes WaymarXStartupRecoveryGate
     } // Closes WindowGroup
-    
+} // Closes var body
     
     // ============================================================
     // MARK: - Navigation Bar Appearance

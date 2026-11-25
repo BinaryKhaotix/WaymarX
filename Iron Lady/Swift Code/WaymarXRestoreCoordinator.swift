@@ -20,6 +20,61 @@ final class WaymarXRestoreCoordinator {
     static let shared = WaymarXRestoreCoordinator()
 
     private init() {}
+    
+    
+    // MARK: - Restore Archive Handoff
+
+    func preserveSelectedBackupForRestore(
+        from sourceURL: URL
+    ) throws -> URL {
+
+        let fileManager = FileManager.default
+
+        let applicationSupport = try fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+
+        let handoffDirectory = applicationSupport
+            .appendingPathComponent(
+                "WaymarX/RestoreHandoff",
+                isDirectory: true
+            )
+
+        try fileManager.createDirectory(
+            at: handoffDirectory,
+            withIntermediateDirectories: true
+        )
+
+        let destinationURL = handoffDirectory
+            .appendingPathComponent(
+                UUID().uuidString
+            )
+            .appendingPathExtension("waymarxbackup")
+
+        do {
+            try fileManager.copyItem(
+                at: sourceURL,
+                to: destinationURL
+            )
+
+            // Verify that the independently owned copy
+            // is readable before proceeding.
+            _ = try WaymarXRestoreManager.shared
+                .validateArchive(at: destinationURL)
+
+            print("✅ Restore archive handoff verified")
+
+            return destinationURL
+
+        } catch {
+            try? fileManager.removeItem(at: destinationURL)
+            throw error
+        }
+    }
+
 
     // MARK: - Simulator Replacement Test
 
@@ -462,7 +517,6 @@ extension WaymarXRestoreCoordinator {
 
 #endif
 
-#if DEBUG && targetEnvironment(simulator)
 
 extension WaymarXRestoreCoordinator {
 
@@ -578,13 +632,9 @@ extension WaymarXRestoreCoordinator {
     }
 }
 
-#endif
-
-#if DEBUG && targetEnvironment(simulator)
-
 extension WaymarXRestoreCoordinator {
 
-    func finalizeCompletedSimulatorRestore(
+    func finalizeCompletedRestore(
         container: NSPersistentContainer
     ) async throws {
 
@@ -642,15 +692,13 @@ extension WaymarXRestoreCoordinator {
             )
         }
 
-        print("✅ SIMULATOR RESTORE FINALIZED")
+        print("✅ WAYMARX RESTORE FINALIZED")
         print("✅ Full database verification passed")
         print("✅ Safety backup preserved")
         print("✅ Staging data preserved")
         print("✅ Recovery journal cleared")
     }
 }
-
-#endif
 
 #if DEBUG && targetEnvironment(simulator)
 
@@ -1127,3 +1175,98 @@ extension WaymarXRestoreCoordinator {
         return safety.fileURL
     }
 }
+
+
+#if DEBUG && targetEnvironment(simulator)
+
+extension WaymarXRestoreCoordinator {
+
+    // MARK: - Coordinated Automatic Restore
+
+    // Called only after the normal app interface has
+    // been replaced by the restore progress screen.
+
+    func executeCoordinatedSimulatorRestore(
+        handoffURL: URL,
+        container: NSPersistentContainer
+    ) async throws -> WaymarXRestoreExecutionResult {
+
+        let presentation = WaymarXRestorePresentation.shared
+        let databaseGate = WaymarXDatabaseAccessGate.shared
+        let arrivalManager = WantToGoArrivalManager.shared
+
+        // Never begin a restore while recovery is pending.
+        guard try !WaymarXRestoreJournal.shared.hasPendingRestore else {
+            throw WaymarXRestoreError.invalidBackup(
+                "A previous restoration requires recovery."
+            )
+        }
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Unsaved database changes prevent restoration."
+            )
+        }
+
+        guard presentation.isRestoring else {
+            throw WaymarXRestoreError.invalidBackup(
+                "The restore interface is not active."
+            )
+        }
+
+        print("🔒 COORDINATED WAYMARX RESTORE STARTED")
+
+        guard !databaseGate.restoreRequested else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Another restore operation is already active."
+            )
+        }
+        
+        // Block new registered database operations.
+        databaseGate.requestRestore()
+
+        // Stop new Want-to-Go monitoring activity.
+        arrivalManager.suspendForRestore()
+
+        presentation.updateStatus(
+            "Waiting for database operations..."
+        )
+
+        // Wait for registered operations to finish.
+        await databaseGate.waitForOperationsToDrain()
+
+        guard !container.viewContext.hasChanges else {
+            throw WaymarXRestoreError.invalidBackup(
+                "Database changes detected before restoration."
+            )
+        }
+
+        presentation.updateStatus(
+            "Creating and verifying safety backup..."
+        )
+
+        // Use the automatic restore engine already
+        // tested in both directions.
+        let result = try await executeAutomaticSafetyRestore(
+            sourceURL: handoffURL,
+            container: container
+        )
+
+        presentation.updateStatus(
+            "Restoration verified. Restart WaymarX to finish recovery."
+        )
+
+        print("✅ COORDINATED RESTORE TRANSACTION COMPLETED")
+
+        // Intentionally do NOT release the database gate.
+        // Intentionally do NOT restart arrival monitoring.
+        // Intentionally do NOT dismiss restore mode.
+        //
+        // Startup recovery must verify and finalize the
+        // transaction before normal operation resumes.
+
+        return result
+    }
+}
+
+#endif

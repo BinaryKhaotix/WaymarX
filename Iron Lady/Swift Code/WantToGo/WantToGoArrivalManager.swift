@@ -29,6 +29,7 @@ final class WantToGoArrivalManager:
     private var monitor: CLMonitor?
     private var monitorTask: Task<Void, Never>?
     private var isStartingMonitor = false
+    private var isSuspendedForRestore = false
     private var locationContinuation:
         CheckedContinuation<CLLocation?, Never>?
     
@@ -92,6 +93,18 @@ final class WantToGoArrivalManager:
     private func handleArrivalDetected(
         breadcrumbID: UUID
     ) async {
+        // MARK: - Restore Database Protection
+
+        let databaseGate = WaymarXDatabaseAccessGate.shared
+
+        guard databaseGate.beginOperation() else {
+            print("🔒 Arrival detection blocked during restore")
+            return
+        }
+
+        defer {
+            databaseGate.endOperation()
+        }
 
         let context =
             PersistenceController
@@ -220,10 +233,30 @@ final class WantToGoArrivalManager:
         activeArrivalPrompt = nil
     }
     
+    // MARK: - Restore Lifecycle
+
+    func suspendForRestore() {
+        isSuspendedForRestore = true
+
+        activeArrivalPrompt = nil
+
+        monitorTask?.cancel()
+        monitorTask = nil
+
+        locationManager.stopMonitoringSignificantLocationChanges()
+
+        print("🔒 Want-to-Go monitoring suspended for restore")
+    }
+    
     // MARK: - Start
 
     func start() {
 
+        guard !isSuspendedForRestore else {
+            print("🔒 Want-to-Go startup blocked during restore")
+            return
+        }
+        
         diagnostics.log(
             "Want To Go arrival manager started.",
             category: "Arrival"
@@ -637,7 +670,13 @@ final class WantToGoArrivalManager:
 
             return
         }
+        
+        let databaseGate = WaymarXDatabaseAccessGate.shared
 
+        guard databaseGate.beginOperation() else {
+            print("🔒 Want-to-Go proximity check blocked during restore")
+            return
+        }
 
         let context =
             PersistenceController
@@ -729,6 +768,7 @@ final class WantToGoArrivalManager:
                     return []
                 }
             }
+        databaseGate.endOperation()
 
 
         guard !nearbyDestinations.isEmpty
@@ -818,6 +858,11 @@ final class WantToGoArrivalManager:
     // MARK: - Start Monitor
 
     private func startMonitor() async {
+        
+        guard !isSuspendedForRestore else {
+            print("🔒 Monitor startup blocked during restore")
+            return
+        }
         
         print("")
         print("WantToGo: startMonitor() called")
@@ -936,6 +981,13 @@ final class WantToGoArrivalManager:
             )
         }
 
+        let databaseGate = WaymarXDatabaseAccessGate.shared
+
+        guard databaseGate.beginOperation() else {
+            print("🔒 Geofence reconciliation blocked during restore")
+            return
+        }
+        
         let context =
             PersistenceController
                 .shared
@@ -1107,6 +1159,7 @@ final class WantToGoArrivalManager:
                 return []
             }
         }
+        databaseGate.endOperation()
 
         print("")
         print(
@@ -1114,6 +1167,10 @@ final class WantToGoArrivalManager:
             breadcrumbData.count
         )
 
+        guard databaseGate.allowsNewOperations else {
+            print("🔒 Geofence updates skipped because restore is active")
+            return
+        }
 
         // MARK: - Build Set Of Current Want-to-Go IDs
 
@@ -1159,6 +1216,11 @@ final class WantToGoArrivalManager:
 
         for identifier
             in staleIdentifiers {
+            
+            guard !isSuspendedForRestore else {
+                print("🔒 Geofence cleanup interrupted by restore")
+                return
+            }
 
             print(
                 "Removing stale WantToGo geofence:",
@@ -1175,6 +1237,11 @@ final class WantToGoArrivalManager:
 
         for item in breadcrumbData {
 
+            guard !isSuspendedForRestore else {
+                    print("🔒 Geofence registration interrupted by restore")
+                    return
+                }
+            
             await addGeofence(
                 id: item.id,
                 name: item.name,
@@ -1397,6 +1464,10 @@ final class WantToGoArrivalManager:
     private func handle(
         _ event: CLMonitor.Event
     ) async {
+        guard !isSuspendedForRestore else {
+            print("🔒 Geofence event ignored during restore")
+            return
+        }
 
         diagnostics.log(
             "Monitor event for \(event.identifier), state: \(event.state)",
@@ -1660,6 +1731,23 @@ final class WantToGoArrivalManager:
     private func markAsVisited(
         breadcrumbID: UUID
     ) async {
+        // MARK: - Restore Database Protection
+
+        let databaseGate = WaymarXDatabaseAccessGate.shared
+
+        guard !isSuspendedForRestore else {
+            print("🔒 Arrival conversion ignored during restore")
+            return
+        }
+        
+        guard databaseGate.beginOperation() else {
+            print("🔒 Want-to-Go conversion blocked during restore")
+            return
+        }
+
+        defer {
+            databaseGate.endOperation()
+        }
         
         diagnostics.log(
             "Marking breadcrumb as visited: \(breadcrumbID.uuidString)",

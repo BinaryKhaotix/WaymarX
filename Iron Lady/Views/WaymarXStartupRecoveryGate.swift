@@ -162,12 +162,10 @@ struct WaymarXStartupRecoveryGate<Content: View>: View {
                     
                 case .completed:
 
-                    #if DEBUG && targetEnvironment(simulator)
-
-                    print("🔍 Verifying completed simulator restore")
+                    print("🔍 Verifying completed WaymarX restore")
 
                     try await WaymarXRestoreCoordinator.shared
-                        .finalizeCompletedSimulatorRestore(
+                        .finalizeCompletedRestore(
                             container: PersistenceController.shared.container
                         )
 
@@ -175,23 +173,8 @@ struct WaymarXStartupRecoveryGate<Content: View>: View {
 
                     status = .ready
                     onReady()
-
-                    #else
-
-                    // Production does not yet automatically clear
-                    // completed restore journals.
-                    status = .interrupted(
-                        """
-                        A completed restoration requires
-                        final recovery verification.
-
-                        No recovery changes have been made.
-                        """
-                    )
-
-                    #endif
-
-
+                    
+                    
                 case .committing, .verifying:
 
                 #if DEBUG && targetEnvironment(simulator)
@@ -278,7 +261,7 @@ struct WaymarXStartupRecoveryGate<Content: View>: View {
 
                         // Reuse the completed-restore finalization path.
                         try await WaymarXRestoreCoordinator.shared
-                            .finalizeCompletedSimulatorRestore(
+                            .finalizeCompletedRestore(
                                 container: container
                             )
 
